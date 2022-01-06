@@ -1,10 +1,9 @@
-import * as React from 'react';
-import { useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { LayoutChangeEvent } from 'react-native';
 import { ViewStyle } from 'react-native';
 import { I18nManager, View, TextInput } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import Animated, { SharedValue, useSharedValue } from 'react-native-reanimated';
+import Animated, { SharedValue, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Ballon, BallonRef } from './';
 
 const {
@@ -140,6 +139,7 @@ const _Slider = ({
   const gestureState = useSharedValue(0);
   const x = useSharedValue(0);
   const width = useSharedValue(0);
+  const [ballonText, setBallon] = useState<string>('')
   const onGestureEvent = event([
     {
       nativeEvent: {
@@ -183,8 +183,8 @@ const _Slider = ({
           setBallonText
             ? setBallonText(ballon ? ballon(x[0]) : x[0].toFixed())
             : ballonRef.current?.setText(
-                ballon ? ballon(x[0]) : x[0].toFixed(),
-              );
+              ballon ? ballon(x[0]) : x[0].toFixed(),
+            );
         }),
         cond(
           eq(gestureState.value, State.BEGAN),
@@ -210,12 +210,29 @@ const _Slider = ({
   const _renderThumbImage = (style: ViewStyle) => {
     return <View style={style} />;
   };
-  const _renderBallon = () => {
-    return <Ballon ref={ballonRef} />;
-  };
-  const thumbRenderer = renderThumbImage || _renderThumbImage;
-  const ballonRenderer = renderBallon || _renderBallon;
 
+  const thumbRenderer = renderThumbImage || _renderThumbImage;
+  const spring_state = {
+    finished: new Value(0),
+    velocity: new Value(0),
+    position: new Value(0),
+    time: new Value(0)
+  };
+  const height = cond(
+    or(
+      eq(gestureState.value, State.BEGAN),
+      eq(gestureState.value, State.ACTIVE)
+    ),
+    [withSpring(1)],
+    cond(
+      or(
+        eq(gestureState.value, State.UNDETERMINED),
+        eq(gestureState.value, State.END)
+      ),
+      [withSpring(0)],
+      spring_state.position
+    )
+  );
   return (
     <PanGestureHandler
       onGestureEvent={onGestureEvent}
@@ -266,7 +283,7 @@ const _Slider = ({
         </Animated.View>
         <Animated.View
           style={{
-            [I18nManager.isRTL ? 'right' : 'left']: this.thumb,
+            [I18nManager.isRTL ? 'right' : 'left']: thumb,
             position: 'absolute',
           }}>
           {thumbRenderer({
@@ -282,20 +299,20 @@ const _Slider = ({
             position: 'absolute',
             [I18nManager.isRTL ? 'right' : 'left']: -50,
             width: BUBBLE_WIDTH,
-            opacity: this.height,
+            opacity: height,
             transform: [
               {
                 translateY: ballonTranslateY,
               },
               {
-                translateX: this.clamped_x,
+                translateX: clamped_x,
               },
               {
-                scale: this.height,
+                scale: height,
               },
             ],
           }}>
-          {ballonRenderer({ text: ballon })}
+          <Ballon ref={ballonRef} />
         </Animated.View>
       </Animated.View>
     </PanGestureHandler>

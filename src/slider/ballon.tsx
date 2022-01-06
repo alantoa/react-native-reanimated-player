@@ -11,17 +11,17 @@ type Props = {
   /**
    * background color of the ballon
    */
-  color: string;
+  color?: string;
 
   /**
    * the style for the container view
    */
-  containerStyle: ViewStyle;
+  containerStyle?: ViewStyle;
 
   /**
    * the style for the TextInput inside ballon
    */
-  textStyle: TextStyle;
+  textStyle?: TextStyle;
 
   bubbleMaxWidth?: number;
 };
@@ -32,7 +32,7 @@ export type BallonRef = {
   setText: (text: string) => void;
 };
 export const Ballon = forwardRef<BallonRef, Props>(
-  ({ containerStyle, color, textStyle, bubbleMaxWidth = BUBBLE_WIDTH }) => {
+  ({ containerStyle, color='#333', textStyle, bubbleMaxWidth = BUBBLE_WIDTH }) => {
     const textRef = useRef<TextInput>(null);
     const setText = (text: string) => {
       textRef.current?.setNativeProps({ text });
