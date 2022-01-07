@@ -1,12 +1,15 @@
 import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 import { TextInput, TextStyle, View, ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { palette } from '../theme/palette';
 
 const BUBBLE_WIDTH = 100;
 const BUBBLE_STYLE: ViewStyle = {
   padding: 2,
+  paddingHorizontal: 4,
   borderRadius: 5,
 };
+
 type Props = {
   /**
    * background color of the ballon
@@ -32,11 +35,22 @@ export type BallonRef = {
   setText: (text: string) => void;
 };
 export const Ballon = forwardRef<BallonRef, Props>(
-  ({ containerStyle, color='#333', textStyle, bubbleMaxWidth = BUBBLE_WIDTH }) => {
+  (
+    {
+      containerStyle,
+      color = palette.Main(1),
+      textStyle,
+      bubbleMaxWidth = BUBBLE_WIDTH,
+    },
+    ref,
+  ) => {
     const textRef = useRef<TextInput>(null);
-    const setText = (text: string) => {
-      textRef.current?.setNativeProps({ text });
-    };
+
+    useImperativeHandle(ref, () => ({
+      setText: (text: string) => {
+        textRef.current?.setNativeProps({ text });
+      },
+    }));
     return (
       <Animated.View style={[containerStyle, { alignItems: 'center' }]}>
         <Animated.View
@@ -47,10 +61,7 @@ export const Ballon = forwardRef<BallonRef, Props>(
           }}>
           <TextInput
             ref={textRef}
-            style={[
-              { paddingVertical: -25, color: '#fff', fontSize: 12 },
-              textStyle,
-            ]}
+            style={[{ color: palette.W(1), fontSize: 12 }, textStyle]}
           />
         </Animated.View>
         <View
@@ -60,7 +71,6 @@ export const Ballon = forwardRef<BallonRef, Props>(
             borderWidth: 5,
             borderColor: 'transparent',
             borderTopColor: color,
-
             backgroundColor: 'transparent',
             flexDirection: 'row',
           }}

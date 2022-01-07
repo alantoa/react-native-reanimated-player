@@ -2,34 +2,27 @@ import React, { useState, useRef } from 'react';
 import { LayoutChangeEvent } from 'react-native';
 import { ViewStyle } from 'react-native';
 import { I18nManager, View, TextInput } from 'react-native';
+import { PanGestureHandlerEventPayload } from 'react-native-gesture-handler';
+import { GestureEvent } from 'react-native-gesture-handler';
+import { TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import Animated, { SharedValue, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  interpolate,
+  SharedValue,
+  useAnimatedGestureHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { runOnJS, sub } from 'react-native-reanimated';
+import { clamp } from 'react-native-redash';
+import { palette } from '../theme/palette';
 import { Ballon, BallonRef } from './';
-
-const {
-  Value,
-  event,
-  cond,
-  eq,
-  set,
-  clockRunning,
-  startClock,
-  spring,
-  stopClock,
-  Extrapolate,
-  sub,
-  Clock,
-  divide,
-  call,
-  interpolateNode,
-  multiply,
-  block,
-  or,
-} = Animated;
 
 const BUBBLE_WIDTH = 100;
 
-type Props = {
+type SliderProps = {
   /**
    * color to fill the progress in the seekbar
    */
@@ -74,21 +67,25 @@ type Props = {
    * an AnimatedValue from `react-native-reanimated` library which is the
    * minimum value of the slider.
    */
-  min: SharedValue<number>;
+  minimumValue: SharedValue<number>;
   /**
    * an AnimatedValue from `react-native-reanimated` library which is the
    * maximum value of the slider.
    */
-  max: SharedValue<number>;
+  maximumValue: SharedValue<number>;
   /**
    * callback called when the users starts sliding
    */
   onSlidingStart: () => void;
   /**
+   * callback called when the users starts sliding
+   */
+  onValueChange?: (second: number) => void;
+  /**
    * callback called when the users stops sliding. the new value will be passed as
    * argument
    */
-  onSlidingComplete: (n: number) => void;
+  onSlidingComplete: (second: number) => void;
   /**
    * render custom Ballon to show when sliding.
    */
@@ -102,7 +99,7 @@ type Props = {
   /**
    * value to pass to the container of the ballon as `translateY`
    */
-  ballonTranslateY: number;
+  ballonTranslateY?: number;
 
   /**
    * render custom thumb image.
@@ -113,131 +110,129 @@ type Props = {
    * thumb offset from the end of seek
    */
   thumbOffset?: number;
+
+  thumbWidth?: number;
+  disable?: boolean;
 };
 
-const _Slider = ({
+export const Slider = ({
   renderBallon,
   renderThumbImage,
   style,
-  minimumTrackTintColor = '#000',
-  maximumTrackTintColor = 'transparent',
-  cacheTrackTintColor = '#333',
-  borderColor = '#fff',
+  minimumTrackTintColor = palette.Main(1),
+  maximumTrackTintColor = palette.G3(1),
+  cacheTrackTintColor = palette.G6(1),
+  borderColor = palette.transparent,
   ballonTranslateY = -25,
   thumbOffset = 7,
   progress,
-  min,
-  max,
+  minimumValue,
+  maximumValue,
   cache,
   onSlidingComplete,
   onSlidingStart,
   setBallonText,
+  onValueChange,
+  thumbWidth = 15,
+  disable,
   ballon,
-}: Props) => {
+}: SliderProps) => {
   const ballonRef = useRef<BallonRef>(null);
-  const _cache = useSharedValue(0);
-  const gestureState = useSharedValue(0);
-  const x = useSharedValue(0);
   const width = useSharedValue(0);
-  const [ballonText, setBallon] = useState<string>('')
-  const onGestureEvent = event([
-    {
-      nativeEvent: {
-        state: gestureState.value,
-        x: x.value,
-      },
+  const seekValue = useSharedValue(0);
+  const thumbValue = useSharedValue(0);
+  const ballonOpacity = useSharedValue(0);
+  const cacheXValue = useSharedValue(0);
+
+  const animatedSeekStyle = useAnimatedStyle(() => {
+    return {
+      width: seekValue.value,
+    };
+  });
+  const animatedThumbStyle = useAnimatedStyle(() => {
+    return {
+      // [I18nManager.isRTL ? 'right' : 'left']: thumbValue.value,
+      transform: [
+        {
+          translateX: thumbValue.value,
+        },
+      ],
+    };
+  });
+  const animatedBubbleStyle = useAnimatedStyle(() => {
+    return {
+      opacity: ballonOpacity.value,
+      transform: [
+        {
+          translateY: ballonTranslateY,
+        },
+        {
+          translateX: thumbValue.value + thumbWidth / 2,
+        },
+        {
+          scale: ballonOpacity.value,
+        },
+      ],
+    };
+  });
+  const animatedCacheXStyle = useAnimatedStyle(() => {
+    return {
+      width: cacheXValue.value,
+    };
+  });
+  /**
+   * convert Sharevalue to seconds
+   * @returns seconds
+   */
+  const shareValueToSeconds = () => {
+    'worklet';
+    return ((thumbValue.value + thumbWidth) / width.value) * maximumValue.value;
+  };
+  /**
+   * convert  seconds  to Sharevalue
+   * @returns ShareValue<number>['value']
+   */
+  const secondsToshareValue = (seconds: number) => {
+    'worklet';
+    return seconds;
+  };
+
+  const onSlideAcitve = (second: number) => {
+    ballonRef.current?.setText(`${Math.round(second).toString()}`);
+    onValueChange?.(second);
+  };
+  const onGestureEvent = useAnimatedGestureHandler<
+    GestureEvent<PanGestureHandlerEventPayload>
+  >({
+    onStart: () => {
+      if (disable) return;
+      if (onSlidingStart) {
+        runOnJS(onSlidingStart)();
+      }
+      ballonOpacity.value = withSpring(1);
     },
-  ]);
+    onActive: ({ x }) => {
+      if (disable) return;
+      runOnJS(onSlideAcitve)(shareValueToSeconds());
+      thumbValue.value = clamp(x, 0, width.value - thumbWidth);
+      seekValue.value = clamp(x, 0, width.value - thumbWidth);
+    },
+
+    onEnd: () => {
+      if (disable) return;
+      if (onSlidingComplete) {
+        runOnJS(onSlidingComplete)(shareValueToSeconds());
+      }
+      ballonOpacity.value = withSpring(0);
+    },
+  });
+
   const onLayout = ({ nativeEvent }: LayoutChangeEvent) => {
     width.value = nativeEvent.layout.width;
   };
-  const convert_to_percent = (value: SharedValue<number>) => {
-    return cond(
-      eq(min.value, max.value),
-      0,
-      divide(value.value, sub(max.value, min.value)),
-    );
-  };
 
-  const cache_x = multiply(convert_to_percent(cache || _cache), width.value);
-  const clamped_x = cond(
-    eq(width.value, 0),
-    0,
-    interpolateNode(x.value, {
-      inputRange: [0, width.value],
-      outputRange: [0, width.value],
-      extrapolate: Extrapolate.CLAMP,
-    }),
-  );
-  const value_x = divide(multiply(clamped_x, max.value), width.value);
-  const progress_x = multiply(convert_to_percent(progress), width.value);
-
-  const seek = block([
-    cond(
-      or(
-        eq(gestureState.value, State.ACTIVE),
-        eq(gestureState.value, State.BEGAN),
-      ),
-      [
-        call([value_x], x => {
-          setBallonText
-            ? setBallonText(ballon ? ballon(x[0]) : x[0].toFixed())
-            : ballonRef.current?.setText(
-              ballon ? ballon(x[0]) : x[0].toFixed(),
-            );
-        }),
-        cond(
-          eq(gestureState.value, State.BEGAN),
-          call([value_x], () => onSlidingStart?.()),
-        ),
-        clamped_x,
-      ],
-      [
-        cond(
-          eq(gestureState.value, State.END),
-          [
-            // set(gestureState.value, State.UNDETERMINED),
-            call([value_x], x => onSlidingComplete?.(x[0])),
-            clamped_x,
-          ],
-          [progress_x],
-        ),
-      ],
-    ),
-  ]);
-  const thumb = sub(seek, thumbOffset);
-
-  const _renderThumbImage = (style: ViewStyle) => {
-    return <View style={style} />;
-  };
-
-  const thumbRenderer = renderThumbImage || _renderThumbImage;
-  const spring_state = {
-    finished: new Value(0),
-    velocity: new Value(0),
-    position: new Value(0),
-    time: new Value(0)
-  };
-  const height = cond(
-    or(
-      eq(gestureState.value, State.BEGAN),
-      eq(gestureState.value, State.ACTIVE)
-    ),
-    [withSpring(1)],
-    cond(
-      or(
-        eq(gestureState.value, State.UNDETERMINED),
-        eq(gestureState.value, State.END)
-      ),
-      [withSpring(0)],
-      spring_state.position
-    )
-  );
   return (
-    <PanGestureHandler
-      onGestureEvent={onGestureEvent}
-      onHandlerStateChange={onGestureEvent}
-      minDist={0}>
+    <PanGestureHandler onGestureEvent={onGestureEvent} minDist={0}>
       <Animated.View
         style={[
           {
@@ -262,56 +257,56 @@ const _Slider = ({
             backgroundColor: maximumTrackTintColor,
           }}>
           <Animated.View
-            style={{
-              backgroundColor: cacheTrackTintColor,
-              height: '100%',
-              width: cache_x,
-              [I18nManager.isRTL ? 'right' : 'left']: 0,
-              position: 'absolute',
-            }}
+            style={[
+              {
+                backgroundColor: cacheTrackTintColor,
+                height: '100%',
+                left: 0,
+                position: 'absolute',
+              },
+              animatedCacheXStyle,
+            ]}
           />
           <Animated.View
-            style={{
-              backgroundColor: minimumTrackTintColor,
-              height: '100%',
-              maxWidth: '100%',
-              width: seek,
-              [I18nManager.isRTL ? 'right' : 'left']: 0,
-              position: 'absolute',
-            }}
+            style={[
+              {
+                backgroundColor: minimumTrackTintColor,
+                height: '100%',
+                maxWidth: '100%',
+                left: 0,
+                position: 'absolute',
+              },
+              animatedSeekStyle,
+            ]}
           />
         </Animated.View>
         <Animated.View
-          style={{
-            [I18nManager.isRTL ? 'right' : 'left']: thumb,
-            position: 'absolute',
-          }}>
-          {thumbRenderer({
-            backgroundColor: minimumTrackTintColor,
-            height: 15,
-            width: 15,
-            borderRadius: 30,
-          })}
+          style={[
+            {
+              position: 'absolute',
+              left: 0,
+            },
+            animatedThumbStyle,
+          ]}>
+          <View
+            style={{
+              backgroundColor: minimumTrackTintColor,
+              height: thumbWidth,
+              width: thumbWidth,
+              borderRadius: thumbWidth,
+            }}
+          />
         </Animated.View>
 
         <Animated.View
-          style={{
-            position: 'absolute',
-            [I18nManager.isRTL ? 'right' : 'left']: -50,
-            width: BUBBLE_WIDTH,
-            opacity: height,
-            transform: [
-              {
-                translateY: ballonTranslateY,
-              },
-              {
-                translateX: clamped_x,
-              },
-              {
-                scale: height,
-              },
-            ],
-          }}>
+          style={[
+            {
+              position: 'absolute',
+              left: -BUBBLE_WIDTH / 2,
+              width: BUBBLE_WIDTH,
+            },
+            animatedBubbleStyle,
+          ]}>
           <Ballon ref={ballonRef} />
         </Animated.View>
       </Animated.View>
