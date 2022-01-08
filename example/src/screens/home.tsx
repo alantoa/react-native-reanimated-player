@@ -36,7 +36,15 @@ export const Home = () => {
             onSlidingStart={onSlidingStart}
             minimumValue={min}
             maximumValue={max}
-            disable
+            thumbWidth={40}
+            renderThumbImage={() => (
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  backgroundColor: 'red',
+                }}></View>
+            )}
           />
         </ScrollView>
       </View>

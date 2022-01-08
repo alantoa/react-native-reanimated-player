@@ -5,7 +5,11 @@ import { I18nManager, View, TextInput } from 'react-native';
 import { PanGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { GestureEvent } from 'react-native-gesture-handler';
 import { TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import {
+  PanGestureHandler,
+  State,
+  TapGestureHandler,
+} from 'react-native-gesture-handler';
 import Animated, {
   interpolate,
   SharedValue,
@@ -78,7 +82,8 @@ type SliderProps = {
    */
   onSlidingStart: () => void;
   /**
-   * callback called when the users starts sliding
+   * callback called when slide value change
+   * @reture max/min
    */
   onValueChange?: (second: number) => void;
   /**
@@ -102,17 +107,26 @@ type SliderProps = {
   ballonTranslateY?: number;
 
   /**
-   * render custom thumb image.
+   * render custom thumb image. if you need to customize thumb, you also need to set the `thumb width`
    */
   renderThumbImage?: () => React.ReactNode;
 
   /**
-   * thumb offset from the end of seek
+   * thumb offset from the end of seek, default 7
    */
   thumbOffset?: number;
-
+  /**
+   * thumb elements width, default 15
+   */
   thumbWidth?: number;
+  /**
+   * disable slide
+   */
   disable?: boolean;
+  /**
+   * enable tap event change value, default true
+   */
+  disableTapEvent?: boolean;
 };
 
 export const Slider = ({
@@ -135,6 +149,7 @@ export const Slider = ({
   onValueChange,
   thumbWidth = 15,
   disable,
+  disableTapEvent = false,
   ballon,
 }: SliderProps) => {
   const ballonRef = useRef<BallonRef>(null);
@@ -149,6 +164,7 @@ export const Slider = ({
       width: seekValue.value,
     };
   });
+
   const animatedThumbStyle = useAnimatedStyle(() => {
     return {
       // [I18nManager.isRTL ? 'right' : 'left']: thumbValue.value,
@@ -159,6 +175,7 @@ export const Slider = ({
       ],
     };
   });
+
   const animatedBubbleStyle = useAnimatedStyle(() => {
     return {
       opacity: ballonOpacity.value,
@@ -175,11 +192,18 @@ export const Slider = ({
       ],
     };
   });
+
   const animatedCacheXStyle = useAnimatedStyle(() => {
     return {
       width: cacheXValue.value,
     };
   });
+
+  const onSlideAcitve = (second: number) => {
+    ballonRef.current?.setText(`${Math.round(second).toString()}`);
+    onValueChange?.(second);
+  };
+
   /**
    * convert Sharevalue to seconds
    * @returns seconds
@@ -188,19 +212,17 @@ export const Slider = ({
     'worklet';
     return ((thumbValue.value + thumbWidth) / width.value) * maximumValue.value;
   };
+
   /**
-   * convert  seconds  to Sharevalue
-   * @returns ShareValue<number>['value']
+   * change slide value
    */
-  const secondsToshareValue = (seconds: number) => {
+  const onActiveSlider = (x: number) => {
     'worklet';
-    return seconds;
+    runOnJS(onSlideAcitve)(shareValueToSeconds());
+    thumbValue.value = clamp(x, 0, width.value - thumbWidth);
+    seekValue.value = clamp(x, 0, width.value - thumbWidth);
   };
 
-  const onSlideAcitve = (second: number) => {
-    ballonRef.current?.setText(`${Math.round(second).toString()}`);
-    onValueChange?.(second);
-  };
   const onGestureEvent = useAnimatedGestureHandler<
     GestureEvent<PanGestureHandlerEventPayload>
   >({
@@ -213,9 +235,7 @@ export const Slider = ({
     },
     onActive: ({ x }) => {
       if (disable) return;
-      runOnJS(onSlideAcitve)(shareValueToSeconds());
-      thumbValue.value = clamp(x, 0, width.value - thumbWidth);
-      seekValue.value = clamp(x, 0, width.value - thumbWidth);
+      onActiveSlider(x);
     },
 
     onEnd: () => {
@@ -227,88 +247,113 @@ export const Slider = ({
     },
   });
 
+  const onSingleTapEvent = useAnimatedGestureHandler<
+    GestureEvent<TapGestureHandlerEventPayload>
+  >({
+    onStart: () => {
+      if (disable || disableTapEvent) return;
+      ballonOpacity.value = withSpring(1);
+    },
+    onActive: ({ x }) => {
+      if (disable || disableTapEvent) return;
+      onActiveSlider(x);
+    },
+    onEnd: () => {
+      if (disable || disableTapEvent) return;
+      ballonOpacity.value = withSpring(0);
+    },
+  });
+
   const onLayout = ({ nativeEvent }: LayoutChangeEvent) => {
     width.value = nativeEvent.layout.width;
   };
 
   return (
     <PanGestureHandler onGestureEvent={onGestureEvent} minDist={0}>
-      <Animated.View
-        style={[
-          {
-            flex: 1,
-            height: 30,
-            overflow: 'visible',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#3330',
-          },
-          style,
-        ]}
-        onLayout={onLayout}>
-        <Animated.View
-          style={{
-            width: '100%',
-            height: 5,
-            borderRadius: 2,
-            borderColor: borderColor,
-            overflow: 'hidden',
-            borderWidth: 1,
-            backgroundColor: maximumTrackTintColor,
-          }}>
+      <Animated.View>
+        <TapGestureHandler onGestureEvent={onSingleTapEvent}>
           <Animated.View
             style={[
               {
-                backgroundColor: cacheTrackTintColor,
-                height: '100%',
-                left: 0,
-                position: 'absolute',
+                flex: 1,
+                height: 30,
+                overflow: 'visible',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#3330',
               },
-              animatedCacheXStyle,
+              style,
             ]}
-          />
-          <Animated.View
-            style={[
-              {
-                backgroundColor: minimumTrackTintColor,
-                height: '100%',
-                maxWidth: '100%',
-                left: 0,
-                position: 'absolute',
-              },
-              animatedSeekStyle,
-            ]}
-          />
-        </Animated.View>
-        <Animated.View
-          style={[
-            {
-              position: 'absolute',
-              left: 0,
-            },
-            animatedThumbStyle,
-          ]}>
-          <View
-            style={{
-              backgroundColor: minimumTrackTintColor,
-              height: thumbWidth,
-              width: thumbWidth,
-              borderRadius: thumbWidth,
-            }}
-          />
-        </Animated.View>
+            onLayout={onLayout}>
+            <Animated.View
+              style={{
+                width: '100%',
+                height: 5,
+                borderRadius: 2,
+                borderColor: borderColor,
+                overflow: 'hidden',
+                borderWidth: 1,
+                backgroundColor: maximumTrackTintColor,
+              }}>
+              <Animated.View
+                style={[
+                  {
+                    backgroundColor: cacheTrackTintColor,
+                    height: '100%',
+                    left: 0,
+                    position: 'absolute',
+                  },
+                  animatedCacheXStyle,
+                ]}
+              />
+              <Animated.View
+                style={[
+                  {
+                    backgroundColor: minimumTrackTintColor,
+                    height: '100%',
+                    maxWidth: '100%',
+                    left: 0,
+                    position: 'absolute',
+                  },
+                  animatedSeekStyle,
+                ]}
+              />
+            </Animated.View>
+            <Animated.View
+              style={[
+                {
+                  position: 'absolute',
+                  left: 0,
+                },
+                animatedThumbStyle,
+              ]}>
+              {renderThumbImage ? (
+                renderThumbImage()
+              ) : (
+                <View
+                  style={{
+                    backgroundColor: minimumTrackTintColor,
+                    height: thumbWidth,
+                    width: thumbWidth,
+                    borderRadius: thumbWidth,
+                  }}
+                />
+              )}
+            </Animated.View>
 
-        <Animated.View
-          style={[
-            {
-              position: 'absolute',
-              left: -BUBBLE_WIDTH / 2,
-              width: BUBBLE_WIDTH,
-            },
-            animatedBubbleStyle,
-          ]}>
-          <Ballon ref={ballonRef} />
-        </Animated.View>
+            <Animated.View
+              style={[
+                {
+                  position: 'absolute',
+                  left: -BUBBLE_WIDTH / 2,
+                  width: BUBBLE_WIDTH,
+                },
+                animatedBubbleStyle,
+              ]}>
+              {renderBallon ? renderBallon() : <Ballon ref={ballonRef} />}
+            </Animated.View>
+          </Animated.View>
+        </TapGestureHandler>
       </Animated.View>
     </PanGestureHandler>
   );
