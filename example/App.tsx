@@ -15,13 +15,7 @@ import { gestureHandlerRootHOC } from 'react-native-gesture-handler';
 import { Home } from './src/screens';
 
 export type RootParamList = {
-  home: undefined;
-  lightbox: undefined;
-  example2: undefined;
-  photos: {
-    index: number;
-    images: string[];
-  };
+  Example: undefined;
 };
 const Stack = createNativeStackNavigator<RootParamList>();
 
@@ -29,7 +23,13 @@ const _App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen name="home" component={Home} />
+        <Stack.Screen
+          name="Example"
+          options={{
+            title: 'Example',
+          }}
+          component={Home}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

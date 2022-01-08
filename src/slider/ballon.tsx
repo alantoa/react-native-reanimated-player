@@ -10,7 +10,7 @@ const BUBBLE_STYLE: ViewStyle = {
   borderRadius: 5,
 };
 
-type Props = {
+export type BallonProps = {
   /**
    * background color of the ballon
    */
@@ -34,7 +34,7 @@ type Props = {
 export type BallonRef = {
   setText: (text: string) => void;
 };
-export const Ballon = forwardRef<BallonRef, Props>(
+export const Ballon = forwardRef<BallonRef, BallonProps>(
   (
     {
       containerStyle,
