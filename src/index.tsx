@@ -1,20 +1,7 @@
-import NetInfo, { NetInfoStateType } from '@react-native-community/netinfo';
-import { useNavigation } from '@react-navigation/core';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { useStores } from 'app/models';
-import { AutoPlayModeEmun } from 'app/models/operation-store/operation-store';
-import { RootParamList } from 'app/navigators';
-import { isIos, normalize } from 'app/utils';
-import { width } from 'app/utils/ui-tools';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  Alert,
-  StatusBar,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Slider } from 'react-native-awesome-slider';
 import {
   GestureEvent,
   TapGestureHandler,
@@ -28,7 +15,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import Slider from 'react-native-reanimated-slider-42';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Video, {
   OnLoadData,
@@ -36,16 +22,14 @@ import Video, {
   OnSeekData,
   VideoProperties,
 } from 'react-native-video';
-import { color } from '../../theme';
-import { palette } from '../../theme/palette';
-import { Icon, Text } from '../index';
+import { Text } from './components';
+import { palette } from './theme/palette';
+import { isIos, normalize, width } from './utils';
 import { VideoError } from './video-error';
 import { VideoLoader } from './video-loading';
 import { VideoReplayed } from './video-replay';
 import { formatTime, secondToTime } from './video-utils';
-
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
-const VIDEO_FULL_SPACE = 0;
 
 const AnimatedLottieView = Animated.createAnimatedComponent(LottieView);
 interface IProps extends VideoProperties {
@@ -79,7 +63,7 @@ const VideoPlayer: React.FC<IProps> = ({
   toggleResizeModeOnFullscreen = true,
   onEnterFullscreen,
   onExitFullscreen,
-  controlTimeout,
+  controlTimeout = 5000,
   headerTop = 0,
   videoDefaultHeight = VIDEO_DEFAULT_HEIGHT,
   videoDefaultWidth = width,
@@ -88,9 +72,6 @@ const VideoPlayer: React.FC<IProps> = ({
   /**
    * hooks
    */
-  const { operationStoreModel } = useStores();
-  const { autoPlayMode, changeAutoPlayMode } = operationStoreModel;
-  const navigation = useNavigation<StackNavigationProp<RootParamList>>();
   const insets = useSafeAreaInsets();
   const dimensions = useWindowDimensions();
   const videoTarget = {
@@ -121,17 +102,18 @@ const VideoPlayer: React.FC<IProps> = ({
   /**
    * refs
    */
-  const player = useRef({
-    controlTimeoutDelay: controlTimeout || 5000,
+  const player = useRef<{
+    controlTimeout: NodeJS.Timeout | null;
+    controlTimeoutDelay: number;
+    duration: number;
+    scrubbing: boolean;
+    seeking: boolean;
+  }>({
+    controlTimeoutDelay: controlTimeout,
     controlTimeout: null,
     duration: 0,
     scrubbing: false,
     seeking: false,
-    originallyPaused: false,
-    isPlayed: false,
-    playableDuration: new Animated.Value(0),
-    seekableDuration: new Animated.Value(0),
-    progress: new Animated.Value(0),
   });
 
   const videoPlayer = useRef<Video>(null);
@@ -149,6 +131,10 @@ const VideoPlayer: React.FC<IProps> = ({
   const videoWidth = useSharedValue(videoDefaultWidth);
   const videoHeight = useSharedValue(videoDefaultHeight);
 
+  const max = useSharedValue(100);
+  const min = useSharedValue(0);
+
+  const progress = useSharedValue(0);
   const videoContainerStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -191,63 +177,14 @@ const VideoPlayer: React.FC<IProps> = ({
    */
   useEffect(() => {
     mounted.current = true;
-    checkPalyerMode();
-    const removeNavigationFocus = navigation.addListener('focus', () => {
-      StatusBar.setBarStyle('dark-content', true);
 
-      checkPalyerMode();
-    });
-    const removeNavigationBlur = navigation.addListener('blur', () => {
-      pause();
-    });
     return () => {
       mounted.current = false;
       clearControlTimeout();
-      removeNavigationFocus();
-      removeNavigationBlur();
       pause();
     };
   }, []);
 
-  /**
-   * check player play mode
-   * @returns void
-   */
-  const checkPalyerMode = async () => {
-    if (autoPlayMode === AutoPlayModeEmun.ALL_OPEN) {
-      play();
-      return;
-    }
-    if (autoPlayMode === AutoPlayModeEmun.ALL_CLOSE) {
-      pause();
-      return;
-    }
-    if (autoPlayMode === AutoPlayModeEmun.ONLY_WIFI_OPEN) {
-      const netInfo = await NetInfo.fetch();
-      if (netInfo.type === NetInfoStateType.wifi) {
-        play();
-      }
-    } else {
-      Alert.alert('您正在使用非Wifi网络，播放可能将消耗流量。', '', [
-        {
-          text: '继续播放',
-          style: 'destructive',
-          onPress: () => {
-            changeAutoPlayMode(AutoPlayModeEmun.ALL_OPEN);
-            play();
-          },
-        },
-        {
-          text: '取消',
-          style: 'cancel',
-          onPress: () => {
-            changeAutoPlayMode(AutoPlayModeEmun.ALL_CLOSE);
-            pause();
-          },
-        },
-      ]);
-    }
-  };
   /**
    * Set a timeout when the controls are shown
    * that hides them after a length of time.
@@ -262,7 +199,7 @@ const VideoPlayer: React.FC<IProps> = ({
    * Clear the hide controls timeout.
    */
   const clearControlTimeout = () => {
-    clearTimeout(player.current.controlTimeout);
+    clearTimeout(player.current.controlTimeout as NodeJS.Timeout);
   };
 
   /**
@@ -366,13 +303,13 @@ const VideoPlayer: React.FC<IProps> = ({
    */
   const seekTo = (time = 0) => {
     setCurrentTime(time);
-    videoPlayer.current.seek(time);
+    videoPlayer.current?.seek(time);
   };
   const onLoad = (data: OnLoadData) => {
+    'worklet';
     player.current.duration = data?.duration;
-    player.current.seekableDuration.setValue(
-      data?.duration as Animated.Adaptable<0>,
-    );
+    max.value = data?.duration;
+
     setIsLoading(false);
     setControlTimeout();
   };
@@ -390,7 +327,7 @@ const VideoPlayer: React.FC<IProps> = ({
       // the last seek command. In this case, perform the steps that have been postponed.
       if (!player.current.seeking) {
         setControlTimeout();
-        player.current.originallyPaused ? play() : pause();
+        pause();
       }
       player.current.scrubbing = false;
       setCurrentTime(data.currentTime);
@@ -406,7 +343,7 @@ const VideoPlayer: React.FC<IProps> = ({
   const onProgress = ({ currentTime }: OnProgressData) => {
     if (!player.current.scrubbing) {
       if (!player.current.seeking) {
-        player.current.progress.setValue(currentTime as Animated.Adaptable<0>);
+        progress.value = currentTime;
       }
       setCurrentTime(currentTime);
     }
@@ -418,7 +355,7 @@ const VideoPlayer: React.FC<IProps> = ({
     setIsPlayed(false);
     seekTo(0);
     setCurrentTime(0);
-    player.current.progress.setValue(0);
+    progress.value = 0;
   };
   /**
    * play the video
@@ -519,7 +456,7 @@ const VideoPlayer: React.FC<IProps> = ({
           fullscreenAutorotate={true}
         />
 
-        <VideoError state={state.error} />
+        <VideoError isError={state.error} />
         <VideoLoader loading={loading} />
         <VideoReplayed isPlayed={isPlayed} onPress={onReplyVideo} />
         <TapGestureHandler
@@ -539,16 +476,12 @@ const VideoPlayer: React.FC<IProps> = ({
                 style={seekbarStyle.container}
                 minimumTrackTintColor={palette.Main(1)}
                 maximumTrackTintColor={palette.W(0.3)}
-                thumbTintColor={palette.W(1)}
-                borderColor={color.transparent}
-                progress={player.current.progress}
+                progress={progress}
                 onSlidingComplete={onSlidingComplete}
                 onSlidingStart={onSlidingStart}
-                thumbStyle={controlStyle.thumbStyle}
-                trackStyle={controlStyle.trackStyle}
-                min={new Animated.Value(0)}
-                max={player.current.seekableDuration}
-                ballon={(value: number) => {
+                minimumValue={min}
+                maximumValue={max}
+                bubble={(value: number) => {
                   return secondToTime(value);
                 }}
               />
@@ -562,10 +495,10 @@ const VideoPlayer: React.FC<IProps> = ({
               </TapGestureHandler>
               <TapGestureHandler onActivated={toggleFullScreen}>
                 <View style={controlStyle.fullToggle}>
-                  <Icon
-                    name={'i-a-ic_fullscreen_24'}
-                    size={18}
-                    color={palette.W(1)}
+                  <AnimatedLottieView
+                    animatedProps={animatedProps}
+                    source={require('./lottie-play.json')}
+                    style={controlStyle.pause}
                   />
                 </View>
               </TapGestureHandler>
@@ -588,13 +521,13 @@ export default VideoPlayer;
  */
 const styles = StyleSheet.create({
   backdrop: {
-    backgroundColor: color.B(1),
+    backgroundColor: palette.B(1),
     flex: 1,
     zIndex: 1,
     ...StyleSheet.absoluteFillObject,
   },
   controlView: {
-    backgroundColor: color.B(0.6),
+    backgroundColor: palette.B(0.6),
     justifyContent: 'flex-end',
     ...StyleSheet.absoluteFillObject,
   },
@@ -648,9 +581,7 @@ const controlStyle = StyleSheet.create({
   row: {
     alignItems: 'center',
     flexDirection: 'row',
-    height: null,
     justifyContent: 'space-between',
-    width: null,
   },
 
   thumbStyle: {

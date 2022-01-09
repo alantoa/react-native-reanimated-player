@@ -1,20 +1,23 @@
-import React from "react"
-import { StyleSheet, View } from "react-native"
-import Spinner from "react-native-spinkit"
-import { palette } from "../../theme/palette"
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Text } from './components';
+import { palette } from './theme/palette';
 
-export const VideoLoader = ({ loading }) => {
-  if (!loading) return null
+type Props = {
+  loading?: boolean;
+};
+export const VideoLoader = React.memo<Props>(function VideoLoader({ loading }) {
+  if (!loading) return null;
   return (
     <View style={loaderStyle.container}>
-      <Spinner type="ChasingDots" color={palette.Main(1)} />
+      <Text h5 color={palette.G1(1)} tx="loading" />
     </View>
-  )
-}
+  );
+});
 const loaderStyle = StyleSheet.create({
   container: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     ...StyleSheet.absoluteFillObject,
   },
-})
+});

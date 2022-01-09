@@ -1,49 +1,43 @@
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useRef } from 'react';
-import { I18nManager } from 'react-native';
-import { ScrollView, StatusBar, TouchableOpacity, View } from 'react-native';
-import { SharedValue, useSharedValue } from 'react-native-reanimated';
-import { Slider } from '../../../src/slider/index';
-import { RootParamList } from '../../App';
-import { Text } from '../components';
+import { ScrollView, View } from 'react-native';
+import { useSharedValue } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import VideoPlayer from 'react-native-video-player';
+import { width } from '../../../src/utils';
+import type { RootParamList } from '../../App';
 export const Home = () => {
   const navigate = useNavigation<NativeStackNavigationProp<RootParamList>>();
   const progress = useSharedValue(0);
   const min = useSharedValue(0);
-  const max = useSharedValue(100);
+  const max = useSharedValue(0);
+  const cache = useSharedValue(80);
+  const disable = useSharedValue(false);
   const isScrubbing = useRef(false);
+  const insets = useSafeAreaInsets();
   useEffect(() => {
     const timer = setInterval(() => {
       progress.value++;
+      cache.value = cache.value + 1.5;
     }, 1000);
     return () => clearTimeout(timer);
   }, [isScrubbing.current]);
-  const onSlidingComplete = (e: number) => {
-    console.log('onSlidingComplete');
-    isScrubbing.current = false;
-  };
-  const onSlidingStart = () => {
-    console.log('onSlidingStart');
-    isScrubbing.current = true;
-  };
+
   return (
     <>
-      <View style={{ flex: 1, backgroundColor: '#e1e1e1' }}>
-        <ScrollView style={{ paddingHorizontal: 20, paddingVertical: 40 }}>
-          <StatusBar barStyle={'dark-content'} />
-          <View>
-            <Text tx="Slider simple" h2 />
-          </View>
-          <Slider
-            progress={progress}
-            onSlidingComplete={onSlidingComplete}
-            onSlidingStart={onSlidingStart}
-            minimumValue={min}
-            maximumValue={max}
-          />
-        </ScrollView>
-      </View>
+      <VideoPlayer
+        source={{
+          uri: 'https://42how-com.oss-cn-beijing.aliyuncs.com/v/%E8%A7%86%E9%A2%91%E7%B4%A0%E6%9D%90/NIO%20Day%204K(1).mp4',
+        }}
+        playWhenInactive
+        posterResizeMode="cover"
+        ignoreSilentSwitch="ignore"
+        headerTop={0}
+      />
+      <ScrollView>
+        <View style={{ height: width * (9 / 16), width: width }} />
+      </ScrollView>
     </>
   );
 };

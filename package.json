@@ -1,62 +1,116 @@
 {
   "name": "react-native-video-player",
   "version": "0.0.1",
-  "description": "react native video player control",
+  "description": "react-native-video-player",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
   "react-native": "src/index",
   "source": "src/index",
+  "files": [
+    "src",
+    "lib",
+    "android",
+    "ios",
+    "cpp",
+    "react-native-awesome-gallery.podspec",
+    "!lib/typescript/example",
+    "!android/build",
+    "!ios/build",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepare": "bob build",
+    "release": "release-it",
+    "lint": "eslint \"**/*.{js,ts,tsx}\"",
+    "test": "jest"
   },
+  "keywords": [
+    "react-native",
+    "ios",
+    "android",
+    "react-native-reanimted",
+    "react-native-gesture-handle",
+    "slider",
+    "scrubber",
+    "video",
+    "control"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MonsterAnan/react-native-image-light-gallery.git"
+    "url": "git+https://github.com/MonsterAnan/react-native-video-player.git"
   },
-  "author": "Toa",
+  "author": "Toa <toacncom@gmail.com> (https://github.com/MonsterAnan)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MonsterAnan/react-native-image-light-gallery/issues"
+    "url": "https://github.com/MonsterAnan/react-native-video-player/issues"
   },
-  "homepage": "https://github.com/MonsterAnan/react-native-image-light-gallery#readme",
+  "homepage": "https://github.com/MonsterAnan/react-native-video-player",
   "dependencies": {
-    "@react-navigation/native": "^6.0.6",
-    "@react-navigation/native-stack": "^6.2.5",
-    "react": "17.0.2",
-    "react-native": "0.66.4",
-    "react-native-gesture-handler": "1.10.3",
-    "react-native-reanimated": "^2.3.1",
-    "react-native-redash": "^16.2.3",
-    "react-native-safe-area-context": "^3.3.2",
-    "react-native-screens": "^3.10.1"
+    "lodash.padstart": "^4.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
     "@babel/runtime": "^7.12.5",
     "@react-native-community/eslint-config": "^2.0.0",
+    "@release-it/conventional-changelog": "^2.0.0",
     "@types/jest": "^26.0.23",
+    "@types/react": "17.0.2",
     "@types/react-native": "^0.66.4",
+    "@types/react-native-video": "^5.0.10",
     "@types/react-test-renderer": "^17.0.1",
     "@typescript-eslint/eslint-plugin": "^5.7.0",
     "@typescript-eslint/parser": "^5.7.0",
     "babel-jest": "^26.6.3",
     "eslint": "^7.14.0",
     "jest": "^26.6.3",
+    "lottie-react-native": "*",
     "metro-react-native-babel-preset": "^0.66.2",
+    "react-native": "0.66.4",
+    "react-native-awesome-slider": "^0.1.7",
+    "react-native-builder-bob": "^0.18.2",
+    "react-native-gesture-handler": "^1.10.1",
+    "react-native-reanimated": "2.1.0",
+    "react-native-safe-area-context": "^3.3.2",
+    "react-native-video": "^5.2.0",
     "react-test-renderer": "17.0.2",
-    "typescript": "^4.4.4",
-    "@types/react": "17.0.2"
+    "release-it": "*",
+    "typescript": "^4.4.4"
   },
   "peerDependencies": {
+    "lottie-react-native": "*",
     "react": "*",
     "react-native": "*",
-    "react-native-gesture-handler": "1.10.3",
+    "react-native-awesome-slider": "*",
+    "react-native-gesture-handler": "*",
     "react-native-reanimated": ">2",
-    "@react-navigation/native": ">6",
-    "@react-navigation/native-stack": ">6",
-    "react-native-redash": "^16",
-    "react-native-safe-area-context": "^3",
-    "react-native-screens": "^3"
+    "react-native-safe-area-context": "*",
+    "react-native-video": "*"
+  },
+  "jest": {
+    "preset": "react-native",
+    "modulePathIgnorePatterns": [
+      "<rootDir>/example/node_modules",
+      "<rootDir>/lib/"
+    ]
+  },
+  "release-it": {
+    "git": {
+      "commitMessage": "chore: release ${version}",
+      "tagName": "v${version}"
+    },
+    "npm": {
+      "publish": true
+    },
+    "github": {
+      "release": true
+    },
+    "plugins": {
+      "@release-it/conventional-changelog": {
+        "preset": "angular"
+      }
+    }
   }
 }

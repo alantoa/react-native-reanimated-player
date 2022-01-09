@@ -1,13 +1,3 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * Generated with the TypeScript template
- * https://github.com/react-native-community/react-native-template-typescript
- *
- * @format
- */
-
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
@@ -19,7 +9,7 @@ export type RootParamList = {
 };
 const Stack = createNativeStackNavigator<RootParamList>();
 
-const _App = () => {
+const App = gestureHandlerRootHOC(() => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
@@ -27,13 +17,12 @@ const _App = () => {
           name="Example"
           options={{
             title: 'Example',
+            headerShown: false,
           }}
           component={Home}
         />
       </Stack.Navigator>
     </NavigationContainer>
   );
-};
-
-const App = gestureHandlerRootHOC(() => <_App />);
+});
 export default App;

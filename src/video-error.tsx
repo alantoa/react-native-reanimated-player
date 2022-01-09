@@ -1,33 +1,25 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from './components';
 import { palette } from './theme/palette';
 
-type ErrorProps = {
+type Props = {
   isError: boolean;
 };
-export const VideoError = ({ isError }: ErrorProps) => {
+
+export const VideoError = React.memo<Props>(function VideoError({ isError }) {
   if (!isError) return null;
-  if (isError) {
-    return (
-      <View style={errorStyle.container}>
-        <Text style={errorStyle.text}>加载错误</Text>
-      </View>
-    );
-  }
-};
+  return (
+    <View style={errorStyle.container}>
+      <Text h5 color={palette.Danger(1)} tx="加载错误" />
+    </View>
+  );
+});
 const errorStyle = StyleSheet.create({
   container: {
     alignItems: 'center',
     backgroundColor: palette.G7(0.5),
-    bottom: 0,
     justifyContent: 'center',
-    left: 0,
-    position: 'absolute',
-    right: 0,
-    top: 0,
-  },
-
-  text: {
-    color: palette.Danger(1),
+    ...StyleSheet.absoluteFillObject,
   },
 });
