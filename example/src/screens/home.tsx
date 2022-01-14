@@ -3,8 +3,12 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useRef } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  useSafeAreaInsets,
+  SafeAreaView,
+} from 'react-native-safe-area-context';
 import VideoPlayer from 'react-native-video-player';
+import { Text } from './../../src/components';
 import { width } from '../../../src/utils';
 import type { RootParamList } from '../../App';
 export const Home = () => {
@@ -25,7 +29,9 @@ export const Home = () => {
   }, [isScrubbing.current]);
 
   return (
-    <>
+    <SafeAreaView
+      style={{ backgroundColor: '#000' }}
+      edges={['top', 'left', 'right']}>
       <VideoPlayer
         source={{
           uri: 'https://42how-com.oss-cn-beijing.aliyuncs.com/v/%E8%A7%86%E9%A2%91%E7%B4%A0%E6%9D%90/NIO%20Day%204K(1).mp4',
@@ -33,11 +39,13 @@ export const Home = () => {
         playWhenInactive
         posterResizeMode="cover"
         ignoreSilentSwitch="ignore"
-        headerTop={0}
+        headerTitle={'Test Title'}
       />
-      <ScrollView>
-        <View style={{ height: width * (9 / 16), width: width }} />
+      <ScrollView style={{ backgroundColor: '#fff', padding: 20 }}>
+        <View style={{ flex: 1, height: 900 }}>
+          <Text>Title</Text>
+        </View>
       </ScrollView>
-    </>
+    </SafeAreaView>
   );
 };

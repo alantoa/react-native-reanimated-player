@@ -69,7 +69,7 @@
     "lottie-react-native": "*",
     "metro-react-native-babel-preset": "^0.66.2",
     "react-native": "0.66.4",
-    "react-native-awesome-slider": "^0.1.7",
+    "react-native-awesome-slider": "^0.1.13",
     "react-native-builder-bob": "^0.18.2",
     "react-native-gesture-handler": "^1.10.1",
     "react-native-reanimated": "2.1.0",
@@ -77,7 +77,9 @@
     "react-native-video": "^5.2.0",
     "react-test-renderer": "17.0.2",
     "release-it": "*",
-    "typescript": "^4.4.4"
+    "typescript": "^4.4.4",
+    "@react-navigation/core": "*",
+    "react-native-orientation-locker": "*"
   },
   "peerDependencies": {
     "lottie-react-native": "*",
@@ -87,7 +89,9 @@
     "react-native-gesture-handler": "*",
     "react-native-reanimated": ">2",
     "react-native-safe-area-context": "*",
-    "react-native-video": "*"
+    "react-native-video": "*",
+    "react-native-orientation-locker": "*",
+    "@react-navigation/core": "*"
   },
   "jest": {
     "preset": "react-native",

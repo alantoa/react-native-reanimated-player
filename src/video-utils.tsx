@@ -45,3 +45,24 @@ export const secondToTime = (seconds: number): string => {
   hour && (output = `${hour}:${output}`);
   return output;
 };
+
+/**
+ * Format a time string as mm:ss
+ *
+ * @param {int} time time in milliseconds
+ * @return {string} formatted time string in mm:ss format
+ */
+export const formatTimeToMins = (duration: number) => {
+  const formattedMinutes = padStart(
+    (Math.floor(duration / 60) % 60).toFixed(0),
+    2,
+    '0',
+  );
+  const formattedSeconds = padStart(
+    Math.floor(duration % 60).toFixed(0),
+    2,
+    '0',
+  );
+
+  return `${formattedMinutes}:${formattedSeconds}`;
+};

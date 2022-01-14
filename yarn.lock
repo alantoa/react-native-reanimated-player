@@ -1643,6 +1643,24 @@
   resolved "https://registry.npmjs.org/@react-native/polyfills/-/polyfills-2.0.0.tgz#4c40b74655c83982c8cf47530ee7dc13d957b6aa"
   integrity sha512-K0aGNn1TjalKj+65D7ycc1//H9roAQ51GJVk5ZJQFb2teECGmzd86bYDC0aYdbRf7gtovescq4Zt6FR0tgXiHQ==
 
+"@react-navigation/core@*":
+  version "6.1.0"
+  resolved "https://registry.npmjs.org/@react-navigation/core/-/core-6.1.0.tgz#95fbf54d78ad0ed976cb73219f0c0199775a1d26"
+  integrity sha512-LyZqD/ZCXSK9+ES8KiH+0tU+7aL84jUw1N9OxZfEuns/OcnSXKC3sOO+9NQ9XRowB1wLUfJhmqZ8G8rUlg33fQ==
+  dependencies:
+    "@react-navigation/routers" "^6.1.0"
+    escape-string-regexp "^4.0.0"
+    nanoid "^3.1.23"
+    query-string "^7.0.0"
+    react-is "^16.13.0"
+
+"@react-navigation/routers@^6.1.0":
+  version "6.1.0"
+  resolved "https://registry.npmjs.org/@react-navigation/routers/-/routers-6.1.0.tgz#d5682be88f1eb7809527c48f9cd3dedf4f344e40"
+  integrity sha512-8xJL+djIzpFdRW/sGlKojQ06fWgFk1c5jER9501HYJ12LF5DIJFr/tqBI2TJ6bk+y+QFu0nbNyeRC80OjRlmkA==
+  dependencies:
+    nanoid "^3.1.23"
+
 "@release-it/conventional-changelog@^2.0.0":
   version "2.0.1"
   resolved "https://registry.npmjs.org/@release-it/conventional-changelog/-/conventional-changelog-2.0.1.tgz#bdd52ad3ecc0d6e39d637592d6ea2bd6d28e5ecb"
@@ -2950,9 +2968,8 @@ colorette@^1.0.7:
   integrity sha512-Y2oEozpomLn7Q3HFP7dpww7AtMJplbM9lGZP6RDfHqmbeRjiwRg4n6VM6j4KLmRke85uWEI7JqF17f3pqdRA0g==
 
 colors@^1.1.2:
-  version "1.4.1"
-  resolved "https://registry.npmjs.org/colors/-/colors-1.4.1.tgz#57e798423c5fa9182f7531e4c587bfce9483175d"
-  integrity sha512-urbBmMVnD1vk0mUwCpnWv06P3f16EF+RMTtIXTkylJk5mAdfrMepu9B3hhSnL8DGkc1Ra6pENJHrXTKvcAZ0wA==
+  version "1.4.0"
+  resolved "https://registry.npmjs.org/colors/-/colors-1.4.0.tgz"
 
 combined-stream@^1.0.8:
   version "1.0.8"
@@ -6543,6 +6560,11 @@ mute-stream@0.0.8:
   resolved "https://registry.npmjs.org/mute-stream/-/mute-stream-0.0.8.tgz#1630c42b2251ff81e2a283de96a5497ea92e5e0d"
   integrity sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==
 
+nanoid@^3.1.23:
+  version "3.1.32"
+  resolved "https://registry.npmjs.org/nanoid/-/nanoid-3.1.32.tgz#8f96069e6239cc0a9ae8c0d3b41a3b4933a88c0a"
+  integrity sha512-F8mf7R3iT9bvThBoW4tGXhXFHCctyCiUUPrWF8WaTqa3h96d9QybkSeba43XVOOE3oiLfkVDe4bT8MeGmkrTxw==
+
 nanomatch@^1.2.9:
   version "1.2.13"
   resolved "https://registry.npmjs.org/nanomatch/-/nanomatch-1.2.13.tgz#b87a8aa4fc0de8fe6be88895b38983ff265bd119"
@@ -7288,6 +7310,16 @@ query-string@^6.13.8:
     split-on-first "^1.0.0"
     strict-uri-encode "^2.0.0"
 
+query-string@^7.0.0:
+  version "7.1.0"
+  resolved "https://registry.npmjs.org/query-string/-/query-string-7.1.0.tgz#96b88f27b39794f97b8c8ccd060bc900495078ef"
+  integrity sha512-wnJ8covk+S9isYR5JIXPt93kFUmI2fQ4R/8130fuq+qwLiGVTurg7Klodgfw4NSz/oe7xnyi09y3lSrogUeM3g==
+  dependencies:
+    decode-uri-component "^0.2.0"
+    filter-obj "^1.1.0"
+    split-on-first "^1.0.0"
+    strict-uri-encode "^2.0.0"
+
 queue-microtask@^1.2.2:
   version "1.2.3"
   resolved "https://registry.npmjs.org/queue-microtask/-/queue-microtask-1.2.3.tgz#4929228bbc724dfac43e0efb058caf7b6cfb6243"
@@ -7331,15 +7363,15 @@ react-devtools-core@^4.13.0:
   resolved "https://registry.npmjs.org/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
-react-is@^16.13.1, react-is@^16.7.0:
+react-is@^16.13.0, react-is@^16.13.1, react-is@^16.7.0:
   version "16.13.1"
   resolved "https://registry.npmjs.org/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
-react-native-awesome-slider@^0.1.7:
-  version "0.1.7"
-  resolved "https://registry.npmjs.org/react-native-awesome-slider/-/react-native-awesome-slider-0.1.7.tgz#68be56b314a5349b83f64dfd35961d5ad405ede5"
-  integrity sha512-En3czbB8nf02f2m7NaY90iKYf6jjiQyltOGofiApSy7o1ELXZucfcJuhf+v8Baw2P+JeZGfsBvqkUGt+pf1ivA==
+react-native-awesome-slider@^0.1.13:
+  version "0.1.13"
+  resolved "https://registry.npmjs.org/react-native-awesome-slider/-/react-native-awesome-slider-0.1.13.tgz#58f19ece4079a0c52173b5f9cb9ae810a71e2001"
+  integrity sha512-cDmXCpJsbmZrtC7Eq8VDCfzu53Im/VFrK0RCxYD0gBM4ahTlLhZ4dwinGqlPwWo2ymqk+Iy0fw84w8lENkrOvw==
 
 react-native-builder-bob@^0.18.2:
   version "0.18.2"
@@ -7387,6 +7419,11 @@ react-native-gesture-handler@^1.10.1:
     hoist-non-react-statics "^3.3.0"
     invariant "^2.2.4"
     prop-types "^15.7.2"
+
+react-native-orientation-locker@*:
+  version "1.4.0"
+  resolved "https://registry.npmjs.org/react-native-orientation-locker/-/react-native-orientation-locker-1.4.0.tgz#ac27a0cd13d5eaaf06b0a2eed2f98f52fbac2f66"
+  integrity sha512-O/Ki7uw1lltKiTZLcTuLcSh4EzLFqXKKo2J4cLKvyG52YiEawbn/ipsZriZlWzK0mhX4dSe79CoRS4IsyUs1fw==
 
 react-native-reanimated@2.1.0:
   version "2.1.0"

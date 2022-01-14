@@ -12,6 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import com.facebook.react.bridge.JSIModulePackage; // <- add
 import com.swmansion.reanimated.ReanimatedJSIModulePackage; // <- add
+import org.wonday.orientation.OrientationActivityLifecycle;
 
 public class MainApplication extends Application implements ReactApplication {
 
@@ -50,6 +51,7 @@ public class MainApplication extends Application implements ReactApplication {
   public void onCreate() {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
+    registerActivityLifecycleCallbacks(OrientationActivityLifecycle.getInstance());
     initializeFlipper(this, getReactNativeHost().getReactInstanceManager());
   }
 
