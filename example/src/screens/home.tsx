@@ -33,9 +33,7 @@ export const Home = () => {
       style={{ backgroundColor: '#000' }}
       edges={['top', 'left', 'right']}>
       <VideoPlayer
-        source={{
-          uri: 'https://42how-com.oss-cn-beijing.aliyuncs.com/v/%E8%A7%86%E9%A2%91%E7%B4%A0%E6%9D%90/NIO%20Day%204K(1).mp4',
-        }}
+        source={require('../assets/billie-demo.mp4')}
         playWhenInactive
         posterResizeMode="cover"
         ignoreSilentSwitch="ignore"
