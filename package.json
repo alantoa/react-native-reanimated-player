@@ -55,6 +55,7 @@
     "@babel/core": "^7.12.9",
     "@babel/runtime": "^7.12.5",
     "@react-native-community/eslint-config": "^2.0.0",
+    "@react-navigation/core": "*",
     "@release-it/conventional-changelog": "^2.0.0",
     "@types/jest": "^26.0.23",
     "@types/react": "17.0.2",
@@ -69,29 +70,28 @@
     "lottie-react-native": "*",
     "metro-react-native-babel-preset": "^0.66.2",
     "react-native": "0.66.4",
-    "react-native-awesome-slider": "^0.1.13",
+    "react-native-awesome-slider": "^0.1.14",
     "react-native-builder-bob": "^0.18.2",
     "react-native-gesture-handler": "^1.10.1",
+    "react-native-orientation-locker": "*",
     "react-native-reanimated": "2.1.0",
     "react-native-safe-area-context": "^3.3.2",
     "react-native-video": "^5.2.0",
     "react-test-renderer": "17.0.2",
     "release-it": "*",
-    "typescript": "^4.4.4",
-    "@react-navigation/core": "*",
-    "react-native-orientation-locker": "*"
+    "typescript": "^4.4.4"
   },
   "peerDependencies": {
+    "@react-navigation/core": "*",
     "lottie-react-native": "*",
     "react": "*",
     "react-native": "*",
     "react-native-awesome-slider": "*",
     "react-native-gesture-handler": "*",
+    "react-native-orientation-locker": "*",
     "react-native-reanimated": ">2",
     "react-native-safe-area-context": "*",
-    "react-native-video": "*",
-    "react-native-orientation-locker": "*",
-    "@react-navigation/core": "*"
+    "react-native-video": "*"
   },
   "jest": {
     "preset": "react-native",

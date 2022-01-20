@@ -39,7 +39,10 @@ export const Home = () => {
         playWhenInactive
         posterResizeMode="cover"
         ignoreSilentSwitch="ignore"
-        headerTitle={'Test Title'}
+        headerTitle={'123123'}
+        onTapBack={() => {
+          navigate.goBack();
+        }}
       />
       <ScrollView style={{ backgroundColor: '#fff', padding: 20 }}>
         <View style={{ flex: 1, height: 900 }}>

@@ -16,7 +16,7 @@
     "lottie-react-native": "^5.0.1",
     "react": "17.0.2",
     "react-native": "0.66.4",
-    "react-native-awesome-slider": "^0.1.13",
+    "react-native-awesome-slider": "^0.1.14",
     "react-native-gesture-handler": "1.10.3",
     "react-native-orientation-locker": "^1.4.0",
     "react-native-reanimated": "^2.3.1",
@@ -43,6 +43,7 @@
   },
   "peerDependencies": {
     "lottie-react-native": "*",
+    "react-native-awesome-slider": "^0.1.14",
     "react-native-gesture-handler": "1.10.3",
     "react-native-reanimated": ">2",
     "react-native-redash": "^16",

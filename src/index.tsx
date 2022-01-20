@@ -1,31 +1,20 @@
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  Alert,
-  StatusBar,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { StatusBar, StyleSheet, View } from 'react-native';
 import { Slider } from 'react-native-awesome-slider/src/index';
 import {
   GestureEvent,
   TapGestureHandler,
-  TapGestureHandlerEventPayload,
   PanGestureHandler,
   PanGestureHandlerEventPayload,
-  TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
 import Orientation, { OrientationType } from 'react-native-orientation-locker';
 import Animated, {
   cancelAnimation,
-  runOnJS,
   useAnimatedGestureHandler,
   useAnimatedProps,
   useAnimatedStyle,
-  useCode,
   useSharedValue,
-  withDelay,
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,16 +25,18 @@ import Video, {
   VideoProperties,
 } from 'react-native-video';
 import { VideoLoader } from './video-loading';
-import { formatTime, secondToTime, formatTimeToMins } from './video-utils';
-import { bin, isIos, normalize, useVector } from './utils';
+import { secondToTime, formatTimeToMins } from './video-utils';
+import { bin, isIos, useVector } from './utils';
 import { Dimensions } from 'react-native';
 import { palette } from './theme/palette';
 import { Text } from './components';
 import { Image } from 'react-native';
+import { TapControler } from './tap-controler';
+
 export const { width, height, scale, fontScale } = Dimensions.get('window');
 
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
-const hitSlop = { left: 8, bottom: 8, right: 8, top: 8 };
+
 const controlAnimteConfig = {
   duration: 200,
 };
@@ -136,7 +127,8 @@ const VideoPlayer: React.FC<IProps> = ({
   const backdropOpacity = useSharedValue(0);
   const controlViewOpacity = useSharedValue(showOnStart ? 1 : 0);
 
-  const playpause = useSharedValue(0.5);
+  const playAnimated = useSharedValue(0.5);
+
   const videoContainerInfo = useVector(videoDefaultWidth, videoDefaultHeight);
 
   const max = useSharedValue(100);
@@ -199,6 +191,19 @@ const VideoPlayer: React.FC<IProps> = ({
   const backdropStyles = useAnimatedStyle(() => {
     return {
       opacity: backdropOpacity.value,
+    };
+  });
+  /**
+   * useAnimatedProps
+   */
+  const playAnimatedProps = useAnimatedProps(() => {
+    return {
+      progress: withTiming(playAnimated.value),
+    };
+  });
+  const fullscreenAnimatedProps = useAnimatedProps(() => {
+    return {
+      progress: withTiming(fullScreen.value ? 0.5 : 0),
     };
   });
   /**
@@ -268,6 +273,7 @@ const VideoPlayer: React.FC<IProps> = ({
     resetControlTimeout();
     paused ? play() : pause();
   };
+
   const singleTapHandler = () => {
     if (controlViewOpacity.value === 0) {
       controlViewOpacity.value = 1;
@@ -409,7 +415,7 @@ const VideoPlayer: React.FC<IProps> = ({
    */
   const play = () => {
     setPaused(false);
-    playpause.value = withTiming(0.5);
+    playAnimated.value = 0.5;
   };
 
   /**
@@ -417,13 +423,8 @@ const VideoPlayer: React.FC<IProps> = ({
    */
   const pause = () => {
     setPaused(true);
-    playpause.value = withTiming(0);
+    playAnimated.value = 0;
   };
-  const animatedProps = useAnimatedProps(() => {
-    return {
-      progress: playpause.value,
-    };
-  });
 
   /**
    * Toggle player full screen state on <Video> component
@@ -505,20 +506,18 @@ const VideoPlayer: React.FC<IProps> = ({
               maxDeltaY={10}>
               <Animated.View style={StyleSheet.absoluteFillObject}>
                 <Animated.View style={[styles.controlView, controlViewStyles]}>
-                  <TapGestureHandler onActivated={onBackTapHandler}>
-                    <Animated.View
-                      hitSlop={hitSlop}
-                      style={[
-                        controlStyle.group,
-                        styles.topControls,
-                        topControlStyle,
-                      ]}>
-                      <Image
-                        source={require('./right_16.png')}
-                        style={styles.back}
-                      />
-                    </Animated.View>
-                  </TapGestureHandler>
+                  <TapControler
+                    onPress={onBackTapHandler}
+                    style={[
+                      controlStyle.group,
+                      styles.topControls,
+                      topControlStyle,
+                    ]}>
+                    <Image
+                      source={require('./assets/right_16.png')}
+                      style={styles.back}
+                    />
+                  </TapControler>
 
                   <Animated.View
                     style={[
@@ -527,14 +526,12 @@ const VideoPlayer: React.FC<IProps> = ({
                       styles.topFullscreenControls,
                       topFullscreenControlStyle,
                     ]}>
-                    <TapGestureHandler onActivated={onBackTapHandler}>
-                      <Animated.View hitSlop={hitSlop}>
-                        <Image
-                          source={require('./right_16.png')}
-                          style={styles.backLarge}
-                        />
-                      </Animated.View>
-                    </TapGestureHandler>
+                    <TapControler onPress={onBackTapHandler}>
+                      <Image
+                        source={require('./assets/right_16.png')}
+                        style={styles.backLarge}
+                      />
+                    </TapControler>
                     <Text
                       tx={headerTitle}
                       h5
@@ -543,14 +540,16 @@ const VideoPlayer: React.FC<IProps> = ({
                       color={palette.W(1)}
                     />
                   </Animated.View>
-                  <TapGestureHandler onActivated={onPauseTapHandler}>
-                    <Animated.View style={[controlStyle.pause, pauseStyle]}>
-                      <AnimatedLottieView
-                        animatedProps={animatedProps}
-                        source={require('./lottie-play.json')}
-                      />
-                    </Animated.View>
-                  </TapGestureHandler>
+
+                  <TapControler
+                    onPress={onPauseTapHandler}
+                    style={[controlStyle.pause, pauseStyle]}>
+                    <AnimatedLottieView
+                      animatedProps={playAnimatedProps}
+                      source={require('./assets/lottie-play.json')}
+                    />
+                  </TapControler>
+
                   <Animated.View
                     style={[
                       controlStyle.group,
@@ -562,22 +561,23 @@ const VideoPlayer: React.FC<IProps> = ({
                         controlStyle.bottomControlGroup,
                         controlStyle.row,
                       ]}>
-                      <TapGestureHandler onActivated={toggleTimer}>
+                      <TapControler onPress={toggleTimer}>
                         <Text
                           style={controlStyle.timerText}
                           color={palette.W(1)}
                           tx={calculateTime()}
                           t4
                         />
-                      </TapGestureHandler>
-                      <TapGestureHandler onActivated={toggleFullScreen}>
-                        <View hitSlop={hitSlop} style={controlStyle.fullToggle}>
-                          <AnimatedLottieView
-                            animatedProps={animatedProps}
-                            source={require('./lottie-fullscreen.json')}
-                          />
-                        </View>
-                      </TapGestureHandler>
+                      </TapControler>
+
+                      <TapControler
+                        onPress={toggleFullScreen}
+                        style={controlStyle.fullToggle}>
+                        <AnimatedLottieView
+                          animatedProps={fullscreenAnimatedProps}
+                          source={require('./assets/lottie-fullscreen.json')}
+                        />
+                      </TapControler>
                     </View>
                     <Animated.View
                       style={[

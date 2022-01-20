@@ -7368,10 +7368,10 @@ react-is@^16.13.0, react-is@^16.13.1, react-is@^16.7.0:
   resolved "https://registry.npmjs.org/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
-react-native-awesome-slider@^0.1.13:
-  version "0.1.13"
-  resolved "https://registry.npmjs.org/react-native-awesome-slider/-/react-native-awesome-slider-0.1.13.tgz#58f19ece4079a0c52173b5f9cb9ae810a71e2001"
-  integrity sha512-cDmXCpJsbmZrtC7Eq8VDCfzu53Im/VFrK0RCxYD0gBM4ahTlLhZ4dwinGqlPwWo2ymqk+Iy0fw84w8lENkrOvw==
+react-native-awesome-slider@^0.1.14:
+  version "0.1.14"
+  resolved "https://registry.npmjs.org/react-native-awesome-slider/-/react-native-awesome-slider-0.1.14.tgz#b598ba7b6f89633cba2b61f64d802dca5d17e734"
+  integrity sha512-HL+ALDKXnXCL3dZoj1yfYez7HLLOu1iUNpq3lsjJ5gjBgRK84JqXx8rsKQaRgcHLARgScPnYDpRuf2gToVDqvg==
 
 react-native-builder-bob@^0.18.2:
   version "0.18.2"
