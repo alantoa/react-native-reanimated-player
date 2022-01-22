@@ -1,4 +1,5 @@
 type opacity = 0.1 | 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1;
+
 export const palette = {
   transparent: `rgba(0,0,0,0)`,
   Main: (opacity: opacity = 1) => `rgba(61, 219, 209, ${opacity})`,

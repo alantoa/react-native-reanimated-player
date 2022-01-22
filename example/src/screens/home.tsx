@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useTheme } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useRef } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
@@ -10,7 +10,8 @@ import {
 import VideoPlayer from 'react-native-video-player';
 import { Text } from './../../src/components';
 import { width } from '../../../src/utils';
-import type { RootParamList } from '../../App';
+
+import type { RootParamList, CustomTheme } from '../../App';
 import { palette } from '../theme/palette';
 export const Home = () => {
   const navigate = useNavigation<NativeStackNavigationProp<RootParamList>>();
@@ -21,6 +22,8 @@ export const Home = () => {
   const disable = useSharedValue(false);
   const isScrubbing = useRef(false);
   const insets = useSafeAreaInsets();
+  const theme = useTheme() as CustomTheme;
+
   useEffect(() => {
     const timer = setInterval(() => {
       progress.value++;
@@ -31,7 +34,10 @@ export const Home = () => {
 
   return (
     <SafeAreaView
-      style={{ backgroundColor: palette.B(1), flex: 1 }}
+      style={{
+        backgroundColor: palette.B(1),
+        flex: 1,
+      }}
       edges={['top', 'left', 'right']}>
       <VideoPlayer
         source={require('../assets/video-demo.mp4')}
@@ -44,8 +50,13 @@ export const Home = () => {
         onTapBack={() => {
           Alert.alert('onTapBack');
         }}
+        initPaused={true}
       />
-      <View style={{ backgroundColor: palette.G8(1), flex: 1 }}>
+      <View
+        style={{
+          backgroundColor: theme.dark ? palette.G8(1) : palette.W(1),
+          flex: 1,
+        }}>
         <ScrollView
           contentContainerStyle={{
             padding: 20,
@@ -53,14 +64,14 @@ export const Home = () => {
           }}>
           <View
             style={{
-              borderBottomColor: palette.G6(1),
+              borderBottomColor: theme.dark ? palette.G6(1) : palette.G2(1),
               borderBottomWidth: 0.5,
               paddingBottom: 8,
             }}>
             <Text
               tx="Billie Eilish - Bad Guy - When We All Fall Asleep, Where Do We Go?"
               h4
-              color={palette.G2(1)}
+              color={theme.dark ? palette.G2(1) : palette.G7(1)}
             />
           </View>
         </ScrollView>

@@ -58,6 +58,7 @@ interface IProps extends VideoProperties {
   headerTitle?: string;
   onTapBack?: () => void;
   navigation?: any;
+  initPaused?: boolean;
 }
 const VideoPlayer: React.FC<IProps> = ({
   resizeMode = 'contain',
@@ -81,6 +82,7 @@ const VideoPlayer: React.FC<IProps> = ({
   headerTitle = '',
   onTapBack,
   navigation,
+  initPaused = false,
   ...rest
 }) => {
   /**
@@ -92,7 +94,7 @@ const VideoPlayer: React.FC<IProps> = ({
   /**
    * state
    */
-  const [paused, setPaused] = useState(false);
+  const [paused, setPaused] = useState(initPaused);
   const [state, setState] = useState({
     // Video
     resizeMode: resizeMode,
@@ -212,6 +214,7 @@ const VideoPlayer: React.FC<IProps> = ({
   useEffect(() => {
     mounted.current = true;
     Orientation.lockToPortrait();
+    initPaused ? pause() : play();
     const unBeforeRemove = navigation?.addListener('beforeRemove', (e: any) => {
       e?.preventDefault();
       if (fullScreen.value) {
