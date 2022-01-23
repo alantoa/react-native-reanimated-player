@@ -25,7 +25,7 @@ import Video, {
   VideoProperties,
 } from 'react-native-video';
 import { VideoLoader } from './video-loading';
-import { secondToTime, formatTimeToMins } from './video-utils';
+import { secondToTime, formatTimeToMins, formatTime } from './video-utils';
 import { bin, isIos, useVector } from './utils';
 import { Dimensions } from 'react-native';
 import { palette } from './theme/palette';
@@ -66,7 +66,6 @@ const VideoPlayer: React.FC<IProps> = ({
   muted = false,
   volume = 1,
   rate = 1,
-  showTimeRemaining = true,
   showHours = false,
   source,
   disableTimer,
@@ -102,7 +101,7 @@ const VideoPlayer: React.FC<IProps> = ({
     volume: volume,
     rate: rate,
     // Controls
-    showTimeRemaining: showTimeRemaining,
+
     showHours: showHours,
     error: false,
     showRemainingTime: false,
@@ -110,7 +109,7 @@ const VideoPlayer: React.FC<IProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [loading, setIsLoading] = useState(false);
-
+  const [showTimeRemaining, setShowTimeRemaining] = useState(true);
   /**
    * refs
    */
@@ -171,8 +170,8 @@ const VideoPlayer: React.FC<IProps> = ({
   });
   const pauseStyle = useAnimatedStyle(() => {
     return {
-      width: fullScreen.value ? 60 : 48,
-      height: fullScreen.value ? 60 : 48,
+      width: fullScreen.value ? 100 : 60,
+      height: fullScreen.value ? 100 : 60,
     };
   });
   const bottomSliderStyle = useAnimatedStyle(() => {
@@ -201,6 +200,10 @@ const VideoPlayer: React.FC<IProps> = ({
   const playAnimatedProps = useAnimatedProps(() => {
     return {
       progress: withTiming(playAnimated.value),
+      style: {
+        width: 80,
+        height: 80,
+      },
     };
   });
   const fullscreenAnimatedProps = useAnimatedProps(() => {
@@ -323,10 +326,7 @@ const VideoPlayer: React.FC<IProps> = ({
       showControlAnimation();
       return;
     }
-    setState({
-      ...state,
-      showTimeRemaining: !state.showTimeRemaining,
-    });
+    setShowTimeRemaining(!showTimeRemaining);
   };
   const onTapSlider = () => {
     if (controlViewOpacity.value === 0) {
@@ -339,9 +339,12 @@ const VideoPlayer: React.FC<IProps> = ({
    * or duration. Formatted to look as 00:00.
    */
   const calculateTime = () => {
-    return `${formatTimeToMins(currentTime)} / ${formatTimeToMins(
-      player.current.duration,
-    )}`;
+    return showTimeRemaining
+      ? `${formatTimeToMins(currentTime)}`
+      : `-${formatTime({
+          time: player.current.duration - currentTime,
+          duration: player.current.duration,
+        })}`;
   };
 
   /**
@@ -546,10 +549,11 @@ const VideoPlayer: React.FC<IProps> = ({
 
                   <TapControler
                     onPress={onPauseTapHandler}
-                    style={[controlStyle.pause, pauseStyle]}>
+                    style={controlStyle.pause}>
                     <AnimatedLottieView
                       animatedProps={playAnimatedProps}
                       source={require('./assets/lottie-play.json')}
+                      style={controlStyle.play}
                     />
                   </TapControler>
 
@@ -565,12 +569,22 @@ const VideoPlayer: React.FC<IProps> = ({
                         controlStyle.row,
                       ]}>
                       <TapControler onPress={toggleTimer}>
-                        <Text
-                          style={controlStyle.timerText}
-                          color={palette.W(1)}
-                          tx={calculateTime()}
-                          t4
-                        />
+                        <Text style={controlStyle.timerText}>
+                          <Text
+                            style={controlStyle.timerText}
+                            color={palette.W(1)}
+                            tx={calculateTime()}
+                            t3
+                          />
+                          <Text
+                            style={controlStyle.timerText}
+                            color={palette.W(1)}
+                            tx={` / ${formatTimeToMins(
+                              player.current.duration,
+                            )}`}
+                            t3
+                          />
+                        </Text>
                       </TapControler>
 
                       <TapControler
@@ -595,7 +609,8 @@ const VideoPlayer: React.FC<IProps> = ({
                       ]}>
                       <Slider
                         minimumTrackTintColor={palette.Main(1)}
-                        maximumTrackTintColor={palette.B(0.3)}
+                        maximumTrackTintColor={palette.B(0.6)}
+                        cacheTrackTintColor={palette.G1(1)}
                         progress={progress}
                         onSlidingComplete={onSlidingComplete}
                         onSlidingStart={onSlidingStart}
@@ -606,8 +621,9 @@ const VideoPlayer: React.FC<IProps> = ({
                         disableTapEvent
                         onTap={onTapSlider}
                         thumbScaleValue={controlViewOpacity}
-                        thumbWidth={8}
+                        thumbWidth={12}
                         sliderHeight={2}
+                        bubbleBackgroundColor={palette.B(0.8)}
                       />
                     </Animated.View>
                   </Animated.View>
@@ -617,7 +633,8 @@ const VideoPlayer: React.FC<IProps> = ({
             <Animated.View style={[styles.slider, bottomSliderStyle]}>
               <Slider
                 minimumTrackTintColor={palette.Main(1)}
-                maximumTrackTintColor={palette.B(0.3)}
+                maximumTrackTintColor={palette.B(0.6)}
+                cacheTrackTintColor={palette.G1(1)}
                 progress={progress}
                 onSlidingComplete={onSlidingComplete}
                 onSlidingStart={onSlidingStart}
@@ -627,10 +644,11 @@ const VideoPlayer: React.FC<IProps> = ({
                 bubble={(value: number) => {
                   return secondToTime(value);
                 }}
+                bubbleBackgroundColor={palette.B(0.8)}
                 disableTapEvent
                 onTap={onTapSlider}
                 thumbScaleValue={controlViewOpacity}
-                thumbWidth={8}
+                thumbWidth={12}
                 sliderHeight={2}
               />
             </Animated.View>
@@ -741,10 +759,14 @@ const controlStyle = StyleSheet.create({
   },
   pause: {
     alignSelf: 'center',
-    backgroundColor: 'rgba(0,0,0,.3)',
     borderRadius: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-
+  play: {
+    width: 80,
+    height: 80,
+  },
   row: {
     alignItems: 'center',
     flexDirection: 'row',
