@@ -50,6 +50,12 @@ export const Home = () => {
         onTapBack={() => {
           Alert.alert('onTapBack');
         }}
+        onTapMore={() => {
+          Alert.alert('onTapMore');
+        }}
+        onToggleAutoPlay={(state: boolean) => {
+          Alert.alert(`onToggleAutoPlay state: ${state}`);
+        }}
         initPaused={true}
       />
       <View

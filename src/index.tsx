@@ -15,6 +15,7 @@ import Animated, {
   useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,6 +37,7 @@ import { TapControler } from './tap-controler';
 export const { width, height, scale, fontScale } = Dimensions.get('window');
 
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
+const hitSlop = { left: 8, bottom: 8, right: 8, top: 8 };
 
 const controlAnimteConfig = {
   duration: 200,
@@ -59,6 +61,9 @@ interface IProps extends VideoProperties {
   onTapBack?: () => void;
   navigation?: any;
   initPaused?: boolean;
+  autoPlay?: boolean;
+  onToggleAutoPlay?: (state: boolean) => void;
+  onTapMore?: () => void;
 }
 const VideoPlayer: React.FC<IProps> = ({
   resizeMode = 'contain',
@@ -82,6 +87,9 @@ const VideoPlayer: React.FC<IProps> = ({
   onTapBack,
   navigation,
   initPaused = false,
+  autoPlay = false,
+  onToggleAutoPlay,
+  onTapMore,
   ...rest
 }) => {
   /**
@@ -110,6 +118,7 @@ const VideoPlayer: React.FC<IProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [loading, setIsLoading] = useState(false);
   const [showTimeRemaining, setShowTimeRemaining] = useState(true);
+  const [allowAutoPlayVideo, setAllowAutoPlayVideo] = useState(autoPlay);
   /**
    * refs
    */
@@ -118,6 +127,7 @@ const VideoPlayer: React.FC<IProps> = ({
   });
   const videoPlayer = useRef<Video>(null);
   const mounted = useRef(false);
+  const autoPlayAnimation = useSharedValue(autoPlay ? 1 : 0);
 
   /**
    * reanimated value
@@ -127,8 +137,9 @@ const VideoPlayer: React.FC<IProps> = ({
 
   const backdropOpacity = useSharedValue(0);
   const controlViewOpacity = useSharedValue(showOnStart ? 1 : 0);
+  const autoPlayTextAnimation = useSharedValue(0);
 
-  const playAnimated = useSharedValue(0.5);
+  const playAnimated = useSharedValue(0);
 
   const videoContainerInfo = useVector(videoDefaultWidth, videoDefaultHeight);
 
@@ -168,12 +179,7 @@ const VideoPlayer: React.FC<IProps> = ({
       opacity: withTiming(bin(fullScreen.value)),
     };
   });
-  const pauseStyle = useAnimatedStyle(() => {
-    return {
-      width: fullScreen.value ? 100 : 60,
-      height: fullScreen.value ? 100 : 60,
-    };
-  });
+
   const bottomSliderStyle = useAnimatedStyle(() => {
     return {
       opacity: withTiming(bin(!fullScreen.value)),
@@ -194,21 +200,27 @@ const VideoPlayer: React.FC<IProps> = ({
       opacity: backdropOpacity.value,
     };
   });
+  const autoPlayTextStyle = useAnimatedStyle(() => {
+    return {
+      opacity: autoPlayTextAnimation.value,
+    };
+  });
   /**
    * useAnimatedProps
    */
   const playAnimatedProps = useAnimatedProps(() => {
     return {
       progress: withTiming(playAnimated.value),
-      style: {
-        width: 80,
-        height: 80,
-      },
     };
   });
   const fullscreenAnimatedProps = useAnimatedProps(() => {
     return {
       progress: withTiming(fullScreen.value ? 0.5 : 0),
+    };
+  });
+  const autoPlayAnimatedProps = useAnimatedProps(() => {
+    return {
+      progress: withTiming(autoPlayAnimation.value, { duration: 600 }),
     };
   });
   /**
@@ -346,7 +358,6 @@ const VideoPlayer: React.FC<IProps> = ({
           duration: player.current.duration,
         })}`;
   };
-
   /**
    * Seek to a time in the video.
    *
@@ -421,7 +432,7 @@ const VideoPlayer: React.FC<IProps> = ({
    */
   const play = () => {
     setPaused(false);
-    playAnimated.value = 0.5;
+    playAnimated.value = 0;
   };
 
   /**
@@ -429,7 +440,20 @@ const VideoPlayer: React.FC<IProps> = ({
    */
   const pause = () => {
     setPaused(true);
-    playAnimated.value = 0;
+    playAnimated.value = 0.5;
+  };
+  const toggleAutoPlay = () => {
+    if (controlViewOpacity.value === 0) {
+      showControlAnimation();
+      return;
+    }
+    resetControlTimeout();
+    autoPlayAnimation.value = autoPlayAnimation.value === 0 ? 0.5 : 0;
+    autoPlayTextAnimation.value = withTiming(1);
+    autoPlayTextAnimation.value = withDelay(3000, withTiming(0));
+
+    setAllowAutoPlayVideo(!allowAutoPlayVideo);
+    onToggleAutoPlay?.(!allowAutoPlayVideo);
   };
 
   /**
@@ -470,6 +494,14 @@ const VideoPlayer: React.FC<IProps> = ({
         : resizeMode,
     });
     setIsFullscreen(!isFullscreen);
+  };
+  const onMoreTapHandler = () => {
+    if (controlViewOpacity.value === 0) {
+      showControlAnimation();
+      return;
+    }
+    resetControlTimeout();
+    onTapMore?.();
   };
 
   /**
@@ -512,19 +544,50 @@ const VideoPlayer: React.FC<IProps> = ({
               maxDeltaY={10}>
               <Animated.View style={StyleSheet.absoluteFillObject}>
                 <Animated.View style={[styles.controlView, controlViewStyles]}>
-                  <TapControler
-                    onPress={onBackTapHandler}
+                  <Animated.View
+                    hitSlop={hitSlop}
                     style={[
                       controlStyle.group,
                       styles.topControls,
                       topControlStyle,
                     ]}>
-                    <Image
-                      source={require('./assets/right_16.png')}
-                      style={styles.back}
-                    />
-                  </TapControler>
+                    <TapControler onPress={onBackTapHandler}>
+                      <Image
+                        source={require('./assets/right_16.png')}
+                        style={styles.back}
+                      />
+                    </TapControler>
 
+                    <View style={controlStyle.line}>
+                      <Animated.View
+                        style={[controlStyle.autoPlayText, autoPlayTextStyle]}>
+                        <Text
+                          tx={
+                            allowAutoPlayVideo
+                              ? `自动播放已开启`
+                              : '自动播放已关闭'
+                          }
+                          t4
+                          color={'#fff'}
+                        />
+                      </Animated.View>
+
+                      <TapControler
+                        onPress={toggleAutoPlay}
+                        style={controlStyle.autoPlay}>
+                        <AnimatedLottieView
+                          animatedProps={autoPlayAnimatedProps}
+                          source={require('./assets/lottie-auto-play.json')}
+                        />
+                      </TapControler>
+                      <TapControler onPress={onMoreTapHandler}>
+                        <Image
+                          source={require('./assets/more_24.png')}
+                          style={styles.more}
+                        />
+                      </TapControler>
+                    </View>
+                  </Animated.View>
                   <Animated.View
                     style={[
                       controlStyle.group,
@@ -532,31 +595,53 @@ const VideoPlayer: React.FC<IProps> = ({
                       styles.topFullscreenControls,
                       topFullscreenControlStyle,
                     ]}>
-                    <TapControler onPress={onBackTapHandler}>
-                      <Image
-                        source={require('./assets/right_16.png')}
-                        style={styles.backLarge}
+                    <View style={controlStyle.line}>
+                      <TapControler onPress={onBackTapHandler}>
+                        <Image
+                          source={require('./assets/right_16.png')}
+                          style={styles.back}
+                        />
+                      </TapControler>
+
+                      <Text
+                        tx={headerTitle}
+                        h5
+                        numberOfLines={1}
+                        style={styles.headerTitle}
+                        color={palette.W(1)}
+                      />
+                    </View>
+                    <View style={controlStyle.line}>
+                      <Animated.View
+                        style={[controlStyle.autoPlayText, autoPlayTextStyle]}>
+                        <Text tx="自动播放已开启" t4 color={'#fff'} />
+                      </Animated.View>
+                      <TapControler
+                        onPress={toggleAutoPlay}
+                        style={controlStyle.autoPlay}>
+                        <AnimatedLottieView
+                          animatedProps={autoPlayAnimatedProps}
+                          source={require('./assets/lottie-auto-play.json')}
+                        />
+                      </TapControler>
+                      <TapControler onPress={onMoreTapHandler}>
+                        <Image
+                          source={require('./assets/more_24.png')}
+                          style={styles.more}
+                        />
+                      </TapControler>
+                    </View>
+                  </Animated.View>
+                  <View style={controlStyle.pauseView}>
+                    <TapControler
+                      onPress={onPauseTapHandler}
+                      style={controlStyle.pause}>
+                      <AnimatedLottieView
+                        animatedProps={playAnimatedProps}
+                        source={require('./assets/lottie-play.json')}
                       />
                     </TapControler>
-                    <Text
-                      tx={headerTitle}
-                      h5
-                      numberOfLines={1}
-                      style={styles.headerTitle}
-                      color={palette.W(1)}
-                    />
-                  </Animated.View>
-
-                  <TapControler
-                    onPress={onPauseTapHandler}
-                    style={controlStyle.pause}>
-                    <AnimatedLottieView
-                      animatedProps={playAnimatedProps}
-                      source={require('./assets/lottie-play.json')}
-                      style={controlStyle.play}
-                    />
-                  </TapControler>
-
+                  </View>
                   <Animated.View
                     style={[
                       controlStyle.group,
@@ -586,7 +671,6 @@ const VideoPlayer: React.FC<IProps> = ({
                           />
                         </Text>
                       </TapControler>
-
                       <TapControler
                         onPress={toggleFullScreen}
                         style={controlStyle.fullToggle}>
@@ -609,8 +693,7 @@ const VideoPlayer: React.FC<IProps> = ({
                       ]}>
                       <Slider
                         minimumTrackTintColor={palette.Main(1)}
-                        maximumTrackTintColor={palette.B(0.6)}
-                        cacheTrackTintColor={palette.G1(1)}
+                        maximumTrackTintColor={palette.B(0.3)}
                         progress={progress}
                         onSlidingComplete={onSlidingComplete}
                         onSlidingStart={onSlidingStart}
@@ -621,9 +704,8 @@ const VideoPlayer: React.FC<IProps> = ({
                         disableTapEvent
                         onTap={onTapSlider}
                         thumbScaleValue={controlViewOpacity}
-                        thumbWidth={12}
+                        thumbWidth={8}
                         sliderHeight={2}
-                        bubbleBackgroundColor={palette.B(0.8)}
                       />
                     </Animated.View>
                   </Animated.View>
@@ -709,8 +791,10 @@ const styles = StyleSheet.create({
   },
   topControls: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     position: 'absolute',
     top: 12,
+    width: '100%',
   },
   topFullscreenControls: {
     top: 32,
@@ -737,19 +821,31 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
   },
+  more: {
+    width: 24,
+    height: 24,
+  },
 });
 
 const controlStyle = StyleSheet.create({
+  autoPlay: {
+    height: 24,
+    marginRight: 32,
+    width: 24,
+  },
+  autoPlayText: {
+    marginRight: 10,
+  },
   bottomControlGroup: {
     justifyContent: 'space-between',
     marginBottom: 10,
   },
+
   bottomControls: {
     bottom: 0,
     position: 'absolute',
     width: '100%',
   },
-
   fullToggle: {
     height: 20,
     width: 20,
@@ -757,15 +853,16 @@ const controlStyle = StyleSheet.create({
   group: {
     paddingHorizontal: 20,
   },
-  pause: {
-    alignSelf: 'center',
-    borderRadius: 100,
-    justifyContent: 'center',
+  line: {
     alignItems: 'center',
+    flexDirection: 'row',
   },
-  play: {
-    width: 80,
-    height: 80,
+  pause: {
+    height: 48,
+    width: 48,
+  },
+  pauseView: {
+    alignSelf: 'center',
   },
   row: {
     alignItems: 'center',
