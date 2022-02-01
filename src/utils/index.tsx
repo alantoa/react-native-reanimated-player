@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Dimensions, Platform } from 'react-native';
 import type Animated from 'react-native-reanimated';
 import { useSharedValue } from 'react-native-reanimated';
@@ -20,4 +21,19 @@ export const useVector = (
   const x = useSharedValue(x1);
   const y = useSharedValue(y1 ?? x1);
   return { x, y };
+};
+
+
+export const useRefs = () => {
+  const pan = useRef(null);
+  const tap = useRef(null);
+  const doubleTapLeft = useRef(null);
+  const doubleTapRight = useRef(null);
+
+  return {
+    pan,
+    tap,
+    doubleTapLeft,
+    doubleTapRight
+  };
 };

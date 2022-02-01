@@ -1,13 +1,15 @@
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { StatusBar, StyleSheet, View } from 'react-native';
+import { StatusBar, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Slider } from 'react-native-awesome-slider/src/index';
 import {
   GestureEvent,
   TapGestureHandler,
   PanGestureHandler,
   PanGestureHandlerEventPayload,
+  RectButton
 } from 'react-native-gesture-handler';
+
 import Orientation, { OrientationType } from 'react-native-orientation-locker';
 import Animated, {
   cancelAnimation,
@@ -27,13 +29,13 @@ import Video, {
 } from 'react-native-video';
 import { VideoLoader } from './video-loading';
 import { secondToTime, formatTimeToMins, formatTime } from './video-utils';
-import { bin, isIos, useVector } from './utils';
+import { bin, isIos, useRefs, useVector } from './utils';
 import { Dimensions } from 'react-native';
 import { palette } from './theme/palette';
 import { Text } from './components';
 import { Image } from 'react-native';
 import { TapControler } from './tap-controler';
-
+import { RippleBtn } from './components/ripple-btn';
 export const { width, height, scale, fontScale } = Dimensions.get('window');
 
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
@@ -64,6 +66,7 @@ interface IProps extends VideoProperties {
   autoPlay?: boolean;
   onToggleAutoPlay?: (state: boolean) => void;
   onTapMore?: () => void;
+  doubleTapInterval?: number
 }
 const VideoPlayer: React.FC<IProps> = ({
   resizeMode = 'contain',
@@ -90,6 +93,7 @@ const VideoPlayer: React.FC<IProps> = ({
   autoPlay = false,
   onToggleAutoPlay,
   onTapMore,
+  doubleTapInterval = 500,
   ...rest
 }) => {
   /**
@@ -97,7 +101,8 @@ const VideoPlayer: React.FC<IProps> = ({
    */
   const insets = useSafeAreaInsets();
   const insetsRef = useRef(insets);
-
+  const dimensions = useWindowDimensions()
+  const doubleTapWidth = (dimensions.width / 2) - insets.left - insets.right - insets.top
   /**
    * state
    */
@@ -109,7 +114,6 @@ const VideoPlayer: React.FC<IProps> = ({
     volume: volume,
     rate: rate,
     // Controls
-
     showHours: showHours,
     error: false,
     showRemainingTime: false,
@@ -128,7 +132,7 @@ const VideoPlayer: React.FC<IProps> = ({
   const videoPlayer = useRef<Video>(null);
   const mounted = useRef(false);
   const autoPlayAnimation = useSharedValue(autoPlay ? 1 : 0);
-
+  const { tap, doubleTapLeft, doubleTapRight, pan } = useRefs();
   /**
    * reanimated value
    */
@@ -300,7 +304,10 @@ const VideoPlayer: React.FC<IProps> = ({
       controlViewOpacity.value = 0;
     }
   };
+  const doubleTapHandler = () => {
+    console.log(21312);
 
+  };
   const onPauseTapHandler = () => {
     if (controlViewOpacity.value === 0) {
       showControlAnimation();
@@ -354,9 +361,9 @@ const VideoPlayer: React.FC<IProps> = ({
     return showTimeRemaining
       ? `${formatTimeToMins(currentTime)}`
       : `-${formatTime({
-          time: player.current.duration - currentTime,
-          duration: player.current.duration,
-        })}`;
+        time: player.current.duration - currentTime,
+        duration: player.current.duration,
+      })}`;
   };
   /**
    * Seek to a time in the video.
@@ -517,7 +524,7 @@ const VideoPlayer: React.FC<IProps> = ({
 
   return (
     <>
-      <PanGestureHandler onGestureEvent={onPanGesture}>
+      <PanGestureHandler ref={pan} onGestureEvent={onPanGesture}>
         <Animated.View style={styles.viewContainer}>
           <Animated.View style={[styles.view, videoStyle]}>
             <Video
@@ -538,12 +545,38 @@ const VideoPlayer: React.FC<IProps> = ({
               fullscreenAutorotate={true}
             />
             <VideoLoader loading={loading} />
+
             <TapGestureHandler
+              ref={tap}
+              waitFor={[doubleTapLeft, doubleTapRight]}
               onActivated={singleTapHandler}
               maxDeltaX={10}
               maxDeltaY={10}>
               <Animated.View style={StyleSheet.absoluteFillObject}>
+
                 <Animated.View style={[styles.controlView, controlViewStyles]}>
+                  {/* <TapGestureHandler
+                    ref={doubleTapLeft}
+                    onActivated={doubleTapHandler}
+                    maxDeltaX={10}
+                    numberOfTaps={2}
+                    maxDurationMs={doubleTapInterval}
+
+                    maxDeltaY={10}>
+                    <Animated.View style={[controlStyle.doubleTap, controlStyle.leftDoubleTap, { width: doubleTapWidth }]}>
+                    </Animated.View>
+                  </TapGestureHandler> */}
+
+                  <TapGestureHandler
+                    ref={doubleTapRight}
+                    onActivated={doubleTapHandler}
+                    maxDeltaX={10}
+                    numberOfTaps={2}
+                    maxDurationMs={doubleTapInterval}
+                    maxDeltaY={10}>
+                    <Animated.View style={[controlStyle.doubleTap, controlStyle.rightDoubleTap, { width: doubleTapWidth }]}>
+                    </Animated.View>
+                  </TapGestureHandler>
                   <Animated.View
                     hitSlop={hitSlop}
                     style={[
@@ -710,7 +743,31 @@ const VideoPlayer: React.FC<IProps> = ({
                     </Animated.View>
                   </Animated.View>
                 </Animated.View>
+
+                <RippleBtn
+                  color={'transparent'}
+                  rippleColor="#fff"
+                  rippleOpacity={0.1}
+                  ref={doubleTapLeft}
+                  containerStyle={controlStyle.leftDoubleTapContainer}
+
+                >
+                  <Animated.View style={[controlStyle.doubleTap, controlStyle.leftDoubleTap, { width: doubleTapWidth }]}>
+                  </Animated.View>
+                </RippleBtn>
+
+                <RippleBtn
+                  color={'transparent'}
+                  rippleColor="#fff"
+                  rippleOpacity={0.1}
+                  ref={doubleTapRight}
+                  containerStyle={controlStyle.rightDoubleTapContainer}
+                >
+                  <Animated.View style={[controlStyle.doubleTap, controlStyle.rightDoubleTap, { width: doubleTapWidth }]}>
+                  </Animated.View>
+                </RippleBtn>
               </Animated.View>
+
             </TapGestureHandler>
             <Animated.View style={[styles.slider, bottomSliderStyle]}>
               <Slider
@@ -742,7 +799,7 @@ const VideoPlayer: React.FC<IProps> = ({
             )}
           </Animated.View>
         </Animated.View>
-      </PanGestureHandler>
+      </PanGestureHandler >
       <Animated.View
         style={[styles.backdrop, backdropStyles]}
         pointerEvents={'none'}
@@ -766,6 +823,7 @@ const styles = StyleSheet.create({
   controlView: {
     backgroundColor: 'rgba(0,0,0,.6)',
     justifyContent: 'center',
+    overflow: 'hidden',
     ...StyleSheet.absoluteFillObject,
   },
   fullscreen: {
@@ -871,4 +929,25 @@ const controlStyle = StyleSheet.create({
   timerText: {
     textAlign: 'right',
   },
+  doubleTap: {
+    position: 'absolute',
+    height: '100%',
+
+  },
+  rightDoubleTap: {
+    right: 0,
+
+  },
+  leftDoubleTap: {
+    left: 0,
+
+  },
+  leftDoubleTapContainer: {
+    borderTopRightRadius: width,
+    borderBottomRightRadius: width,
+  },
+  rightDoubleTapContainer: {
+    borderTopLeftRadius: width,
+    borderBottomLeftRadius: width,
+  }
 });

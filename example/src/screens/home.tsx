@@ -9,10 +9,9 @@ import {
 } from 'react-native-safe-area-context';
 import VideoPlayer from 'react-native-video-player';
 import { Text } from './../../src/components';
-import { width } from '../../../src/utils';
-
 import type { RootParamList, CustomTheme } from '../../App';
 import { palette } from '../theme/palette';
+
 export const Home = () => {
   const navigate = useNavigation<NativeStackNavigationProp<RootParamList>>();
   const progress = useSharedValue(0);
