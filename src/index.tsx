@@ -7,7 +7,7 @@ import {
   TapGestureHandler,
   PanGestureHandler,
   PanGestureHandlerEventPayload,
-  RectButton
+  RectButton,
 } from 'react-native-gesture-handler';
 
 import Orientation, { OrientationType } from 'react-native-orientation-locker';
@@ -35,7 +35,7 @@ import { palette } from './theme/palette';
 import { Text } from './components';
 import { Image } from 'react-native';
 import { TapControler } from './tap-controler';
-import { RippleBtn } from './components/ripple-btn';
+import type { TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
 export const { width, height, scale, fontScale } = Dimensions.get('window');
 
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
@@ -66,7 +66,7 @@ interface IProps extends VideoProperties {
   autoPlay?: boolean;
   onToggleAutoPlay?: (state: boolean) => void;
   onTapMore?: () => void;
-  doubleTapInterval?: number
+  doubleTapInterval?: number;
 }
 const VideoPlayer: React.FC<IProps> = ({
   resizeMode = 'contain',
@@ -101,8 +101,11 @@ const VideoPlayer: React.FC<IProps> = ({
    */
   const insets = useSafeAreaInsets();
   const insetsRef = useRef(insets);
-  const dimensions = useWindowDimensions()
-  const doubleTapWidth = (dimensions.width / 2) - insets.left - insets.right - insets.top
+  const dimensions = useWindowDimensions();
+  const leftDoubleTapBoundary =
+    dimensions.width / 2 - insets.left - insets.right - 80;
+  const rightDoubleTapBoundary =
+    dimensions.width / 2 + insets.left + insets.right + 80;
   /**
    * state
    */
@@ -132,7 +135,7 @@ const VideoPlayer: React.FC<IProps> = ({
   const videoPlayer = useRef<Video>(null);
   const mounted = useRef(false);
   const autoPlayAnimation = useSharedValue(autoPlay ? 1 : 0);
-  const { tap, doubleTapLeft, doubleTapRight, pan } = useRefs();
+  const { tap, doubleTap, pan } = useRefs();
   /**
    * reanimated value
    */
@@ -196,7 +199,7 @@ const VideoPlayer: React.FC<IProps> = ({
   });
   const controlViewStyles = useAnimatedStyle(() => {
     return {
-      opacity: withTiming(controlViewOpacity.value, controlAnimteConfig),
+      opacity: controlViewOpacity.value,
     };
   });
   const backdropStyles = useAnimatedStyle(() => {
@@ -257,8 +260,10 @@ const VideoPlayer: React.FC<IProps> = ({
    */
   const setControlTimeout = () => {
     'worklet';
-
-    // controlViewOpacity.value = withDelay(controlTimeout, 0)
+    controlViewOpacity.value = withDelay(
+      controlTimeout,
+      withTiming(0, controlAnimteConfig),
+    );
   };
 
   /**
@@ -267,6 +272,7 @@ const VideoPlayer: React.FC<IProps> = ({
   const clearControlTimeout = () => {
     'worklet';
     cancelAnimation(controlViewOpacity);
+    controlViewOpacity.value = withTiming(1);
   };
 
   /**
@@ -284,7 +290,7 @@ const VideoPlayer: React.FC<IProps> = ({
    */
   const showControlAnimation = () => {
     'worklet';
-    controlViewOpacity.value = 1;
+    controlViewOpacity.value = withTiming(1, controlAnimteConfig);
   };
 
   const togglePlayPause = () => {
@@ -295,19 +301,34 @@ const VideoPlayer: React.FC<IProps> = ({
     resetControlTimeout();
     paused ? play() : pause();
   };
+  const singleTapHandler = useAnimatedGestureHandler<
+    GestureEvent<TapGestureHandlerEventPayload>
+  >({
+    onActive: () => {
+      if (controlViewOpacity.value === 0) {
+        controlViewOpacity.value = withTiming(1, controlAnimteConfig);
+        setControlTimeout();
+      } else {
+        controlViewOpacity.value = withTiming(0, controlAnimteConfig);
+      }
+    },
+  });
 
-  const singleTapHandler = () => {
-    if (controlViewOpacity.value === 0) {
-      controlViewOpacity.value = 1;
-      setControlTimeout();
-    } else {
-      controlViewOpacity.value = 0;
-    }
-  };
-  const doubleTapHandler = () => {
-    console.log(21312);
-
-  };
+  const doubleTapHandler = useAnimatedGestureHandler<
+    GestureEvent<TapGestureHandlerEventPayload>
+  >({
+    onActive: ({ absoluteX, numberOfPointers }) => {
+      if (numberOfPointers !== 1) return;
+      if (absoluteX < leftDoubleTapBoundary) {
+        console.log(`left tap`);
+        return;
+      }
+      if (absoluteX > rightDoubleTapBoundary) {
+        console.log(`right tap`);
+        return;
+      }
+    },
+  });
   const onPauseTapHandler = () => {
     if (controlViewOpacity.value === 0) {
       showControlAnimation();
@@ -361,9 +382,9 @@ const VideoPlayer: React.FC<IProps> = ({
     return showTimeRemaining
       ? `${formatTimeToMins(currentTime)}`
       : `-${formatTime({
-        time: player.current.duration - currentTime,
-        duration: player.current.duration,
-      })}`;
+          time: player.current.duration - currentTime,
+          duration: player.current.duration,
+        })}`;
   };
   /**
    * Seek to a time in the video.
@@ -548,87 +569,26 @@ const VideoPlayer: React.FC<IProps> = ({
 
             <TapGestureHandler
               ref={tap}
-              waitFor={[doubleTapLeft, doubleTapRight]}
-              onActivated={singleTapHandler}
+              waitFor={doubleTap}
+              onGestureEvent={singleTapHandler}
               maxDeltaX={10}
               maxDeltaY={10}>
               <Animated.View style={StyleSheet.absoluteFillObject}>
-
-                <Animated.View style={[styles.controlView, controlViewStyles]}>
-                  {/* <TapGestureHandler
-                    ref={doubleTapLeft}
-                    onActivated={doubleTapHandler}
-                    maxDeltaX={10}
-                    numberOfTaps={2}
-                    maxDurationMs={doubleTapInterval}
-
-                    maxDeltaY={10}>
-                    <Animated.View style={[controlStyle.doubleTap, controlStyle.leftDoubleTap, { width: doubleTapWidth }]}>
-                    </Animated.View>
-                  </TapGestureHandler> */}
-
-                  <TapGestureHandler
-                    ref={doubleTapRight}
-                    onActivated={doubleTapHandler}
-                    maxDeltaX={10}
-                    numberOfTaps={2}
-                    maxDurationMs={doubleTapInterval}
-                    maxDeltaY={10}>
-                    <Animated.View style={[controlStyle.doubleTap, controlStyle.rightDoubleTap, { width: doubleTapWidth }]}>
-                    </Animated.View>
-                  </TapGestureHandler>
+                <TapGestureHandler
+                  maxDurationMs={500}
+                  maxDeltaX={10}
+                  numberOfTaps={2}
+                  ref={doubleTap}
+                  onGestureEvent={doubleTapHandler}>
                   <Animated.View
-                    hitSlop={hitSlop}
-                    style={[
-                      controlStyle.group,
-                      styles.topControls,
-                      topControlStyle,
-                    ]}>
-                    <TapControler onPress={onBackTapHandler}>
-                      <Image
-                        source={require('./assets/right_16.png')}
-                        style={styles.back}
-                      />
-                    </TapControler>
-
-                    <View style={controlStyle.line}>
-                      <Animated.View
-                        style={[controlStyle.autoPlayText, autoPlayTextStyle]}>
-                        <Text
-                          tx={
-                            allowAutoPlayVideo
-                              ? `自动播放已开启`
-                              : '自动播放已关闭'
-                          }
-                          t4
-                          color={'#fff'}
-                        />
-                      </Animated.View>
-
-                      <TapControler
-                        onPress={toggleAutoPlay}
-                        style={controlStyle.autoPlay}>
-                        <AnimatedLottieView
-                          animatedProps={autoPlayAnimatedProps}
-                          source={require('./assets/lottie-auto-play.json')}
-                        />
-                      </TapControler>
-                      <TapControler onPress={onMoreTapHandler}>
-                        <Image
-                          source={require('./assets/more_24.png')}
-                          style={styles.more}
-                        />
-                      </TapControler>
-                    </View>
-                  </Animated.View>
-                  <Animated.View
-                    style={[
-                      controlStyle.group,
-                      styles.topControls,
-                      styles.topFullscreenControls,
-                      topFullscreenControlStyle,
-                    ]}>
-                    <View style={controlStyle.line}>
+                    style={[styles.controlView, controlViewStyles]}>
+                    <Animated.View
+                      hitSlop={hitSlop}
+                      style={[
+                        controlStyle.group,
+                        styles.topControls,
+                        topControlStyle,
+                      ]}>
                       <TapControler onPress={onBackTapHandler}>
                         <Image
                           source={require('./assets/right_16.png')}
@@ -636,138 +596,166 @@ const VideoPlayer: React.FC<IProps> = ({
                         />
                       </TapControler>
 
-                      <Text
-                        tx={headerTitle}
-                        h5
-                        numberOfLines={1}
-                        style={styles.headerTitle}
-                        color={palette.W(1)}
-                      />
-                    </View>
-                    <View style={controlStyle.line}>
-                      <Animated.View
-                        style={[controlStyle.autoPlayText, autoPlayTextStyle]}>
-                        <Text tx="自动播放已开启" t4 color={'#fff'} />
-                      </Animated.View>
-                      <TapControler
-                        onPress={toggleAutoPlay}
-                        style={controlStyle.autoPlay}>
-                        <AnimatedLottieView
-                          animatedProps={autoPlayAnimatedProps}
-                          source={require('./assets/lottie-auto-play.json')}
-                        />
-                      </TapControler>
-                      <TapControler onPress={onMoreTapHandler}>
-                        <Image
-                          source={require('./assets/more_24.png')}
-                          style={styles.more}
-                        />
-                      </TapControler>
-                    </View>
-                  </Animated.View>
-                  <View style={controlStyle.pauseView}>
-                    <TapControler
-                      onPress={onPauseTapHandler}
-                      style={controlStyle.pause}>
-                      <AnimatedLottieView
-                        animatedProps={playAnimatedProps}
-                        source={require('./assets/lottie-play.json')}
-                      />
-                    </TapControler>
-                  </View>
-                  <Animated.View
-                    style={[
-                      controlStyle.group,
-                      controlStyle.bottomControls,
-                      bottomControlStyle,
-                    ]}>
-                    <View
+                      <View style={controlStyle.line}>
+                        <Animated.View
+                          style={[
+                            controlStyle.autoPlayText,
+                            autoPlayTextStyle,
+                          ]}>
+                          <Text
+                            tx={
+                              allowAutoPlayVideo
+                                ? `自动播放已开启`
+                                : '自动播放已关闭'
+                            }
+                            t4
+                            color={'#fff'}
+                          />
+                        </Animated.View>
+
+                        <TapControler
+                          onPress={toggleAutoPlay}
+                          style={controlStyle.autoPlay}>
+                          <AnimatedLottieView
+                            animatedProps={autoPlayAnimatedProps}
+                            source={require('./assets/lottie-auto-play.json')}
+                          />
+                        </TapControler>
+                        <TapControler onPress={onMoreTapHandler}>
+                          <Image
+                            source={require('./assets/more_24.png')}
+                            style={styles.more}
+                          />
+                        </TapControler>
+                      </View>
+                    </Animated.View>
+                    <Animated.View
                       style={[
-                        controlStyle.bottomControlGroup,
-                        controlStyle.row,
+                        controlStyle.group,
+                        styles.topControls,
+                        styles.topFullscreenControls,
+                        topFullscreenControlStyle,
                       ]}>
-                      <TapControler onPress={toggleTimer}>
-                        <Text style={controlStyle.timerText}>
-                          <Text
-                            style={controlStyle.timerText}
-                            color={palette.W(1)}
-                            tx={calculateTime()}
-                            t3
+                      <View style={controlStyle.line}>
+                        <TapControler onPress={onBackTapHandler}>
+                          <Image
+                            source={require('./assets/right_16.png')}
+                            style={styles.back}
                           />
-                          <Text
-                            style={controlStyle.timerText}
-                            color={palette.W(1)}
-                            tx={` / ${formatTimeToMins(
-                              player.current.duration,
-                            )}`}
-                            t3
+                        </TapControler>
+
+                        <Text
+                          tx={headerTitle}
+                          h5
+                          numberOfLines={1}
+                          style={styles.headerTitle}
+                          color={palette.W(1)}
+                        />
+                      </View>
+                      <View style={controlStyle.line}>
+                        <Animated.View
+                          style={[
+                            controlStyle.autoPlayText,
+                            autoPlayTextStyle,
+                          ]}>
+                          <Text tx="自动播放已开启" t4 color={'#fff'} />
+                        </Animated.View>
+                        <TapControler
+                          onPress={toggleAutoPlay}
+                          style={controlStyle.autoPlay}>
+                          <AnimatedLottieView
+                            animatedProps={autoPlayAnimatedProps}
+                            source={require('./assets/lottie-auto-play.json')}
                           />
-                        </Text>
-                      </TapControler>
+                        </TapControler>
+                        <TapControler onPress={onMoreTapHandler}>
+                          <Image
+                            source={require('./assets/more_24.png')}
+                            style={styles.more}
+                          />
+                        </TapControler>
+                      </View>
+                    </Animated.View>
+                    <View style={controlStyle.pauseView}>
                       <TapControler
-                        onPress={toggleFullScreen}
-                        style={controlStyle.fullToggle}>
+                        onPress={onPauseTapHandler}
+                        style={controlStyle.pause}>
                         <AnimatedLottieView
-                          animatedProps={fullscreenAnimatedProps}
-                          source={require('./assets/lottie-fullscreen.json')}
+                          animatedProps={playAnimatedProps}
+                          source={require('./assets/lottie-play.json')}
                         />
                       </TapControler>
                     </View>
                     <Animated.View
                       style={[
-                        {
-                          width:
-                            height -
-                            insetsRef.current.top -
-                            insetsRef.current.bottom -
-                            40,
-                        },
-                        fullScreenSliderStyle,
+                        controlStyle.group,
+                        controlStyle.bottomControls,
+                        bottomControlStyle,
                       ]}>
-                      <Slider
-                        minimumTrackTintColor={palette.Main(1)}
-                        maximumTrackTintColor={palette.B(0.3)}
-                        progress={progress}
-                        onSlidingComplete={onSlidingComplete}
-                        onSlidingStart={onSlidingStart}
-                        minimumValue={min}
-                        maximumValue={max}
-                        isScrubbing={isScrubbing}
-                        bubble={secondToTime}
-                        disableTapEvent
-                        onTap={onTapSlider}
-                        thumbScaleValue={controlViewOpacity}
-                        thumbWidth={8}
-                        sliderHeight={2}
-                      />
+                      <View
+                        style={[
+                          controlStyle.bottomControlGroup,
+                          controlStyle.row,
+                        ]}>
+                        <TapControler onPress={toggleTimer}>
+                          <Text style={controlStyle.timerText}>
+                            <Text
+                              style={controlStyle.timerText}
+                              color={palette.W(1)}
+                              tx={calculateTime()}
+                              t3
+                            />
+                            <Text
+                              style={controlStyle.timerText}
+                              color={palette.W(1)}
+                              tx={` / ${formatTimeToMins(
+                                player.current.duration,
+                              )}`}
+                              t3
+                            />
+                          </Text>
+                        </TapControler>
+                        <TapControler
+                          onPress={toggleFullScreen}
+                          style={controlStyle.fullToggle}>
+                          <AnimatedLottieView
+                            animatedProps={fullscreenAnimatedProps}
+                            source={require('./assets/lottie-fullscreen.json')}
+                          />
+                        </TapControler>
+                      </View>
+                      <Animated.View
+                        style={[
+                          {
+                            width:
+                              height -
+                              insetsRef.current.top -
+                              insetsRef.current.bottom -
+                              40,
+                          },
+                          fullScreenSliderStyle,
+                        ]}>
+                        <Slider
+                          minimumTrackTintColor={palette.Main(1)}
+                          maximumTrackTintColor={palette.B(0.3)}
+                          progress={progress}
+                          onSlidingComplete={onSlidingComplete}
+                          onSlidingStart={onSlidingStart}
+                          minimumValue={min}
+                          maximumValue={max}
+                          isScrubbing={isScrubbing}
+                          bubble={secondToTime}
+                          disableTapEvent
+                          onTap={onTapSlider}
+                          thumbScaleValue={controlViewOpacity}
+                          thumbWidth={8}
+                          sliderHeight={2}
+                        />
+                      </Animated.View>
                     </Animated.View>
                   </Animated.View>
-                </Animated.View>
-
-                <RippleBtn
-                  color={'transparent'}
-                  rippleColor="#fff"
-                  rippleOpacity={0.1}
-                  ref={doubleTapLeft}
-                  containerStyle={controlStyle.leftDoubleTapContainer}
-
-                >
-                  <Animated.View style={[controlStyle.doubleTap, controlStyle.leftDoubleTap, { width: doubleTapWidth }]}>
-                  </Animated.View>
-                </RippleBtn>
-
-                <RippleBtn
-                  color={'transparent'}
-                  rippleColor="#fff"
-                  rippleOpacity={0.1}
-                  ref={doubleTapRight}
-                  containerStyle={controlStyle.rightDoubleTapContainer}
-                >
-                  <Animated.View style={[controlStyle.doubleTap, controlStyle.rightDoubleTap, { width: doubleTapWidth }]}>
-                  </Animated.View>
-                </RippleBtn>
+                </TapGestureHandler>
               </Animated.View>
-
             </TapGestureHandler>
             <Animated.View style={[styles.slider, bottomSliderStyle]}>
               <Slider
@@ -799,7 +787,7 @@ const VideoPlayer: React.FC<IProps> = ({
             )}
           </Animated.View>
         </Animated.View>
-      </PanGestureHandler >
+      </PanGestureHandler>
       <Animated.View
         style={[styles.backdrop, backdropStyles]}
         pointerEvents={'none'}
@@ -874,6 +862,7 @@ const styles = StyleSheet.create({
   back: {
     width: 16,
     height: 16,
+    zIndex: 100,
   },
   backLarge: {
     width: 24,
@@ -932,15 +921,12 @@ const controlStyle = StyleSheet.create({
   doubleTap: {
     position: 'absolute',
     height: '100%',
-
   },
   rightDoubleTap: {
     right: 0,
-
   },
   leftDoubleTap: {
     left: 0,
-
   },
   leftDoubleTapContainer: {
     borderTopRightRadius: width,
@@ -949,5 +935,5 @@ const controlStyle = StyleSheet.create({
   rightDoubleTapContainer: {
     borderTopLeftRadius: width,
     borderBottomLeftRadius: width,
-  }
+  },
 });

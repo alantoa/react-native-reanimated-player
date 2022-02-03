@@ -27,13 +27,11 @@ export const useVector = (
 export const useRefs = () => {
   const pan = useRef(null);
   const tap = useRef(null);
-  const doubleTapLeft = useRef(null);
-  const doubleTapRight = useRef(null);
+  const doubleTap = useRef(null);
 
   return {
     pan,
     tap,
-    doubleTapLeft,
-    doubleTapRight
+    doubleTap
   };
 };
