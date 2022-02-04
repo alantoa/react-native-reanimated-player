@@ -1,4 +1,4 @@
-import React, { useImperativeHandle, useState } from 'react';
+import React, { useEffect, useImperativeHandle, useState } from 'react';
 import type { ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type { TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
@@ -22,23 +22,22 @@ type RippleBtnProps = {
   rippleOpacity?: number;
   x: number;
   y: number;
+  radius: number;
 };
-export type RippleRefs = {
-  disparchRipple: ({ x, y }: { x: number; y: number }) => void;
-};
+type RippleRefs = {};
 const _RippleBtn = React.forwardRef<RippleRefs, RippleBtnProps>(
   (
     {
       rippleScale = 1,
-      duration = 250,
+      duration = 500,
       rippleColor = '#000',
       rippleOpacity = 0.5,
       x,
       y,
+      radius,
     },
     ref,
   ) => {
-    const [radius, setRadius] = useState(-1);
     const scale = useSharedValue(0);
     const positionX = useSharedValue(0);
     const positionY = useSharedValue(0);
@@ -55,29 +54,23 @@ const _RippleBtn = React.forwardRef<RippleRefs, RippleBtnProps>(
       }),
       [radius],
     );
+    useEffect(() => {
 
-    useImperativeHandle(
-      ref,
-      () => ({
-        disparchRipple: ({ x, y }: { x: number; y: number }) => {
-          isFinished.value = false;
-          positionX.value = x;
-          positionY.value = y;
-          scale.value = withTiming(
-            rippleScale,
-            { duration, easing: Easing.bezier(0, 0, 0.8, 0.4) },
-            finised => {
-              if (finised) {
-                isFinished.value = true;
-                scale.value = withTiming(0, { duration: 0 });
-              }
-            },
-          );
+      isFinished.value = false;
+      positionX.value = x;
+      positionY.value = y;
+      scale.value = withTiming(
+        rippleScale,
+        { duration, easing: Easing.bezier(0, 0, 0.8, 0.4) },
+        finised => {
+          if (finised) {
+            isFinished.value = true;
+            scale.value = withTiming(0, { duration: 0 });
+          }
         },
-      }),
-      [],
-    );
-
+      );
+    }, []);
+    if (radius === -1) return null;
     return (
       <Animated.View
         style={[

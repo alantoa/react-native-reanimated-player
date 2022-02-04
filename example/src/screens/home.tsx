@@ -11,6 +11,7 @@ import VideoPlayer from 'react-native-video-player';
 import { Text } from './../../src/components';
 import type { RootParamList, CustomTheme } from '../../App';
 import { palette } from '../theme/palette';
+import { RippleRefs, Ripples } from '../../../src/components/ripples';
 
 export const Home = () => {
   const navigate = useNavigation<NativeStackNavigationProp<RootParamList>>();
@@ -21,6 +22,7 @@ export const Home = () => {
   const disable = useSharedValue(false);
   const isScrubbing = useRef(false);
   const insets = useSafeAreaInsets();
+  const ripplesRef = useRef<RippleRefs>(null);
   const theme = useTheme() as CustomTheme;
 
   useEffect(() => {
@@ -77,8 +79,20 @@ export const Home = () => {
               tx="Billie Eilish - Bad Guy - When We All Fall Asleep, Where Do We Go?"
               h4
               color={theme.dark ? palette.G2(1) : palette.G7(1)}
+              onPress={e =>
+                ripplesRef.current?.dispatchRipple({
+                  x: e.nativeEvent.locationX,
+                  y: e.nativeEvent.locationY,
+                })
+              }
             />
           </View>
+          <Ripples
+            ref={ripplesRef}
+            style={{ backgroundColor: 'red', width: 300, height: 300 }}
+            color="#fff"
+            rippleOpacity={0.3}
+          />
         </ScrollView>
       </View>
     </SafeAreaView>

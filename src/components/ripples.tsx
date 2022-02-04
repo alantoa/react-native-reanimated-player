@@ -1,5 +1,8 @@
-import React, { useImperativeHandle, useState } from 'react';
+import React, { useImperativeHandle, useRef, useState } from 'react';
+import type { GestureResponderEvent } from 'react-native';
 import type { ViewStyle } from 'react-native';
+import { TouchableWithoutFeedback } from 'react-native';
+import { Pressable } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
@@ -14,48 +17,71 @@ import { Ripple } from './ripple';
 type ValueOf<T> = T[keyof T];
 
 type RippleBtnProps = {
-  children: React.ReactElement;
   color: string;
-  onPress?: () => void;
   rippleScale?: number;
   duration?: number;
   overflow?: boolean;
   rippleColor?: string;
   rippleOpacity?: number;
   containerStyle?: ViewStyle;
-  style: ViewStyle;
+  style?: ViewStyle;
 };
+type RippleType = { x: number; y: number; progress: number; unique: number };
+
 export type RippleRefs = {
-  disparchRipple: ({ x, y }: { x: number; y: number }) => void;
+  dispatchRipple: ({ x, y }: RippleType) => void;
 };
 export const Ripples = React.forwardRef<RippleRefs, RippleBtnProps>(
   ({ style, color, containerStyle, overflow = false }, ref) => {
-    const [ripples, setRipples] = useState([{ x: 0, y: 0 }]);
+    const unique = useRef(0);
+    const [ripples, setRipples] = useState<RippleType[]>([]);
     const [radius, setRadius] = useState(-1);
 
+    useImperativeHandle(ref, () => ({
+      dispatchRipple: (ripple: RippleType) => {
+        setRipples(ripples.concat(ripple));
+      },
+    }));
+    const onTouchable = ({ nativeEvent }: GestureResponderEvent) => {
+      console.log(nativeEvent.pageX);
+
+      setRipples(
+        ripples.concat({
+          x: nativeEvent.locationX,
+          y: nativeEvent.locationY,
+          unique: unique.current++,
+          progress: 0,
+        }),
+      );
+    };
+    const onAnimationEnd = () => {
+      setRipples(ripples.slice(1));
+    };
     return (
-      <Animated.View style={style}>
-        <View
-          style={[
-            {
-              ...StyleSheet.absoluteFillObject,
-              backgroundColor: color,
-              overflow: !overflow ? 'hidden' : undefined,
-            },
-            containerStyle,
-          ]}
-          onLayout={({
-            nativeEvent: {
-              layout: { width, height },
-            },
-          }) => {
-            setRadius(Math.sqrt(width ** 2 + height ** 2));
-          }}>
-          {ripples.map(item => (
-            <Ripple x={item.x} y={item.y} />
-          ))}
-        </View>
-      </Animated.View>
+      <TouchableWithoutFeedback onPress={onTouchable}>
+        <Animated.View style={style}>
+          <View
+            style={[
+              {
+                ...StyleSheet.absoluteFillObject,
+                backgroundColor: color,
+                overflow: !overflow ? 'hidden' : undefined,
+              },
+              containerStyle,
+            ]}
+            onLayout={({
+              nativeEvent: {
+                layout: { width, height },
+              },
+            }) => {
+              setRadius(Math.sqrt(width ** 2 + height ** 2));
+            }}>
+            {ripples.map((item, i) => (
+              <Ripple x={item.x} y={item.y} radius={radius} key={`${i}`} />
+            ))}
+          </View>
+        </Animated.View>
+      </TouchableWithoutFeedback>
     );
   },
 );
