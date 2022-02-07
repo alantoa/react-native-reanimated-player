@@ -279,6 +279,7 @@ const VideoPlayer: React.FC<IProps> = ({
    * Reset the timer completely
    */
   const resetControlTimeout = () => {
+    'worklet';
     clearControlTimeout();
     setControlTimeout();
   };
@@ -315,10 +316,31 @@ const VideoPlayer: React.FC<IProps> = ({
   });
 
   const doubleTapHandler = useAnimatedGestureHandler<
-    GestureEvent<TapGestureHandlerEventPayload>
+    GestureEvent<TapGestureHandlerEventPayload>,
+    {
+      isAlive: boolean;
+    }
   >({
-    onActive: ({ absoluteX, numberOfPointers }) => {
+    onStart: ({ absoluteX }, ctx) => {
+      if (
+        absoluteX > leftDoubleTapBoundary &&
+        absoluteX < rightDoubleTapBoundary
+      ) {
+        ctx.isAlive = false;
+        return;
+      } else {
+        ctx.isAlive = true;
+      }
+    },
+    onActive: ({ absoluteX, numberOfPointers }, ctx) => {
       if (numberOfPointers !== 1) return;
+      if (!ctx.isAlive) {
+        resetControlTimeout();
+        if (controlViewOpacity.value === 0) {
+          showControlAnimation();
+          return;
+        }
+      }
       if (absoluteX < leftDoubleTapBoundary) {
         console.log(`left tap`);
         return;
