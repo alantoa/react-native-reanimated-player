@@ -7,12 +7,11 @@ import {
   TapGestureHandler,
   PanGestureHandler,
   PanGestureHandlerEventPayload,
-  RectButton,
 } from 'react-native-gesture-handler';
-
 import Orientation, { OrientationType } from 'react-native-orientation-locker';
 import Animated, {
   cancelAnimation,
+  runOnJS,
   useAnimatedGestureHandler,
   useAnimatedProps,
   useAnimatedStyle,
@@ -36,6 +35,7 @@ import { Text } from './components';
 import { Image } from 'react-native';
 import { TapControler } from './tap-controler';
 import type { TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
+import { Ripple } from './components/ripple';
 export const { width, height, scale, fontScale } = Dimensions.get('window');
 
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
@@ -46,6 +46,7 @@ const controlAnimteConfig = {
 };
 
 const AnimatedLottieView = Animated.createAnimatedComponent(LottieView);
+
 interface IProps extends VideoProperties {
   showOnStart?: boolean;
   showTimeRemaining?: boolean;
@@ -68,6 +69,7 @@ interface IProps extends VideoProperties {
   onTapMore?: () => void;
   doubleTapInterval?: number;
 }
+
 const VideoPlayer: React.FC<IProps> = ({
   resizeMode = 'contain',
   showOnStart = true,
@@ -102,10 +104,12 @@ const VideoPlayer: React.FC<IProps> = ({
   const insets = useSafeAreaInsets();
   const insetsRef = useRef(insets);
   const dimensions = useWindowDimensions();
+
   const leftDoubleTapBoundary =
     dimensions.width / 2 - insets.left - insets.right - 80;
+
   const rightDoubleTapBoundary =
-    dimensions.width / 2 + insets.left + insets.right + 80;
+    dimensions.width - leftDoubleTapBoundary - insets.left - insets.right;
   /**
    * state
    */
@@ -135,7 +139,7 @@ const VideoPlayer: React.FC<IProps> = ({
   const videoPlayer = useRef<Video>(null);
   const mounted = useRef(false);
   const autoPlayAnimation = useSharedValue(autoPlay ? 1 : 0);
-  const { tap, doubleTap, pan } = useRefs();
+  const { tap, doubleTap, pan, rippleLeft, rippleRight } = useRefs();
   /**
    * reanimated value
    */
@@ -145,6 +149,8 @@ const VideoPlayer: React.FC<IProps> = ({
   const backdropOpacity = useSharedValue(0);
   const controlViewOpacity = useSharedValue(showOnStart ? 1 : 0);
   const autoPlayTextAnimation = useSharedValue(0);
+  const doubleLeftOpacity = useSharedValue(0);
+  const doubleRightOpacity = useSharedValue(0);
 
   const playAnimated = useSharedValue(0);
 
@@ -210,6 +216,18 @@ const VideoPlayer: React.FC<IProps> = ({
   const autoPlayTextStyle = useAnimatedStyle(() => {
     return {
       opacity: autoPlayTextAnimation.value,
+    };
+  });
+
+  const getDoubleLeftStyle = useAnimatedStyle(() => {
+    return {
+      opacity: withTiming(doubleLeftOpacity.value),
+    };
+  });
+
+  const getDoubleRightStyle = useAnimatedStyle(() => {
+    return {
+      opacity: withTiming(doubleRightOpacity.value),
     };
   });
   /**
@@ -302,6 +320,9 @@ const VideoPlayer: React.FC<IProps> = ({
     resetControlTimeout();
     paused ? play() : pause();
   };
+  const seekByStep = (isBack = false) => {
+    seekTo(currentTime - (isBack ? 10 : -10));
+  };
   const singleTapHandler = useAnimatedGestureHandler<
     GestureEvent<TapGestureHandlerEventPayload>
   >({
@@ -321,18 +342,15 @@ const VideoPlayer: React.FC<IProps> = ({
       isAlive: boolean;
     }
   >({
-    onStart: ({ absoluteX }, ctx) => {
-      if (
-        absoluteX > leftDoubleTapBoundary &&
-        absoluteX < rightDoubleTapBoundary
-      ) {
+    onStart: ({ x }, ctx) => {
+      if (x > leftDoubleTapBoundary && x < rightDoubleTapBoundary) {
         ctx.isAlive = false;
         return;
       } else {
         ctx.isAlive = true;
       }
     },
-    onActive: ({ absoluteX, numberOfPointers }, ctx) => {
+    onActive: ({ x, y, numberOfPointers }, ctx) => {
       if (numberOfPointers !== 1) return;
       if (!ctx.isAlive) {
         resetControlTimeout();
@@ -341,16 +359,27 @@ const VideoPlayer: React.FC<IProps> = ({
           return;
         }
       }
-      if (absoluteX < leftDoubleTapBoundary) {
-        console.log(`left tap`);
+
+      if (x < leftDoubleTapBoundary) {
+        doubleLeftOpacity.value = 1;
+        rippleLeft.current?.onPress({ x, y });
+        runOnJS(seekByStep)(true);
         return;
       }
-      if (absoluteX > rightDoubleTapBoundary) {
-        console.log(`right tap`);
+
+      if (x > rightDoubleTapBoundary) {
+        doubleRightOpacity.value = 1;
+        rippleRight.current?.onPress({
+          x: x - rightDoubleTapBoundary,
+          y,
+        });
+        runOnJS(seekByStep)(false);
+
         return;
       }
     },
   });
+
   const onPauseTapHandler = () => {
     if (controlViewOpacity.value === 0) {
       showControlAnimation();
@@ -535,6 +564,7 @@ const VideoPlayer: React.FC<IProps> = ({
         onEnterFullscreen?.();
       }
     });
+
     setState({
       ...state,
       resizeMode: toggleResizeModeOnFullscreen
@@ -543,6 +573,7 @@ const VideoPlayer: React.FC<IProps> = ({
           : 'contain'
         : resizeMode,
     });
+
     setIsFullscreen(!isFullscreen);
   };
   const onMoreTapHandler = () => {
@@ -777,6 +808,47 @@ const VideoPlayer: React.FC<IProps> = ({
                     </Animated.View>
                   </Animated.View>
                 </TapGestureHandler>
+                <Ripple
+                  ref={rippleLeft}
+                  onAnimationEnd={() => {
+                    doubleLeftOpacity.value = 0;
+                  }}
+                  style={[controlStyle.doubleTap, controlStyle.leftDoubleTap]}
+                  containerStyle={[{ width: leftDoubleTapBoundary }]}>
+                  <Animated.View style={getDoubleLeftStyle}>
+                    <LottieView
+                      source={require('./assets/lottie-seek-back.json')}
+                      autoPlay
+                      loop
+                      style={controlStyle.backStep}
+                    />
+                    <Text tx="back 10s" color={palette.W(1)} t5 />
+                  </Animated.View>
+                </Ripple>
+
+                <Ripple
+                  ref={rippleRight}
+                  onAnimationEnd={() => {
+                    doubleRightOpacity.value = 0;
+                  }}
+                  style={[
+                    controlStyle.doubleTap,
+                    controlStyle.rightDoubleTapContainer,
+                  ]}
+                  containerStyle={[{ width: leftDoubleTapBoundary }]}>
+                  <Animated.View style={getDoubleRightStyle}>
+                    <LottieView
+                      source={require('./assets/lottie-seek-back.json')}
+                      autoPlay
+                      loop
+                      style={[
+                        controlStyle.backStep,
+                        { transform: [{ rotate: '90deg' }] },
+                      ]}
+                    />
+                    <Text tx="ahead 10s" color={palette.W(1)} t5 />
+                  </Animated.View>
+                </Ripple>
               </Animated.View>
             </TapGestureHandler>
             <Animated.View style={[styles.slider, bottomSliderStyle]}>
@@ -943,19 +1015,25 @@ const controlStyle = StyleSheet.create({
   doubleTap: {
     position: 'absolute',
     height: '100%',
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
   },
-  rightDoubleTap: {
-    right: 0,
-  },
+
   leftDoubleTap: {
     left: 0,
-  },
-  leftDoubleTapContainer: {
     borderTopRightRadius: width,
     borderBottomRightRadius: width,
   },
+
   rightDoubleTapContainer: {
     borderTopLeftRadius: width,
     borderBottomLeftRadius: width,
+    right: 0,
+  },
+  backStep: {
+    width: 20,
+    height: 20,
+    marginBottom: 8,
   },
 });

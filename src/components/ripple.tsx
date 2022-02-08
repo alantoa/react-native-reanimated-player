@@ -1,90 +1,131 @@
-import React, { useEffect, useImperativeHandle, useState } from 'react';
+import React, { useImperativeHandle, useState } from 'react';
+import type { StyleProp } from 'react-native';
 import type { ViewStyle } from 'react-native';
+import { Dimensions } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import type { TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import type { GestureEvent } from 'react-native-gesture-handler';
 import { State, TapGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
+  measure,
   runOnJS,
   useAnimatedGestureHandler,
+  useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { hexToRgbA } from '../utils/hexToRgba';
+import { width } from 'react-native-video-player';
+export type RippleTargetEvent = { x: number; y: number };
 
 type RippleBtnProps = {
-  onPress?: () => void;
-  rippleScale?: number;
+  children: React.ReactElement;
   duration?: number;
-  rippleColor?: string;
-  rippleOpacity?: number;
-  x: number;
-  y: number;
-  radius: number;
+  overflow?: boolean;
+  containerStyle?: StyleProp<ViewStyle>;
+  backgroundColor?: string;
+  onAnimationEnd?: () => void;
+  style?: StyleProp<ViewStyle>;
 };
-type RippleRefs = {};
-const _RippleBtn = React.forwardRef<RippleRefs, RippleBtnProps>(
+export type RippleRef = {
+  onPress: ({ x, y }: RippleTargetEvent) => void;
+};
+const _Ripple = React.forwardRef<RippleRef, RippleBtnProps>(
   (
     {
-      rippleScale = 1,
-      duration = 500,
-      rippleColor = '#000',
-      rippleOpacity = 0.5,
-      x,
-      y,
-      radius,
+      children,
+      containerStyle,
+      duration = 600,
+      backgroundColor = 'rgba(255,255,255,.3)',
+      onAnimationEnd,
+      overflow,
+      style,
     },
     ref,
   ) => {
     const scale = useSharedValue(0);
-    const positionX = useSharedValue(0);
-    const positionY = useSharedValue(0);
+    const centerX = useSharedValue(0);
+    const centerY = useSharedValue(0);
     const isFinished = useSharedValue(false);
-    const uas = useAnimatedStyle(
-      () => ({
-        top: positionY.value - radius,
-        left: positionX.value - radius,
+    const rippleOpacity = useSharedValue(1);
+    const [radius, setRadius] = useState(-1);
+
+    const rStyle = useAnimatedStyle(() => {
+      const translateX = centerX.value - radius;
+      const translateY = centerY.value - radius;
+
+      return {
+        opacity: rippleOpacity.value,
+
         transform: [
+          { translateX },
+          { translateY },
           {
             scale: scale.value,
           },
         ],
-      }),
-      [radius],
-    );
-    useEffect(() => {
+      };
+    }, [radius]);
+    useImperativeHandle(ref, () => ({
+      onPress: ({ x, y }) => {
+        'worklet';
 
-      isFinished.value = false;
-      positionX.value = x;
-      positionY.value = y;
-      scale.value = withTiming(
-        rippleScale,
-        { duration, easing: Easing.bezier(0, 0, 0.8, 0.4) },
-        finised => {
+        centerX.value = x;
+        centerY.value = y;
+
+        rippleOpacity.value = 1;
+        scale.value = 0;
+        scale.value = withTiming(1, { duration }, finised => {
           if (finised) {
             isFinished.value = true;
             scale.value = withTiming(0, { duration: 0 });
+            if (onAnimationEnd) {
+              runOnJS(onAnimationEnd)();
+            }
           }
-        },
-      );
-    }, []);
-    if (radius === -1) return null;
+        });
+      },
+    }));
+
     return (
-      <Animated.View
-        style={[
-          uas,
-          {
-            position: 'absolute',
-            width: radius * 2,
-            height: radius * 2,
-            borderRadius: radius,
-            backgroundColor: hexToRgbA(rippleColor, rippleOpacity),
+      <View
+        onLayout={({
+          nativeEvent: {
+            layout: { width, height },
           },
-        ]}
-      />
+        }) => {
+          setRadius(Math.sqrt(width ** 2 + height ** 2));
+        }}
+        style={[style]}
+        pointerEvents="none">
+        {radius > -1 && (
+          <Animated.View
+            style={[
+              style,
+              containerStyle,
+              { overflow: !overflow ? 'hidden' : 'visible' },
+            ]}>
+            {children}
+            <Animated.View
+              style={[
+                {
+                  backgroundColor,
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: radius * 2,
+                  height: radius * 2,
+                  borderRadius: radius,
+                  zIndex: 1121,
+                },
+                rStyle,
+              ]}
+            />
+          </Animated.View>
+        )}
+      </View>
     );
   },
 );
-export const Ripple = React.memo(_RippleBtn);
+export const Ripple = React.memo(_Ripple);
