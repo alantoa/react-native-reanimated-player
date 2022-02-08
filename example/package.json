@@ -18,6 +18,7 @@
     "react-native": "0.66.4",
     "react-native-awesome-slider": "^0.1.14",
     "react-native-gesture-handler": "1.10.3",
+    "react-native-inkwell": "^0.4.5",
     "react-native-orientation-locker": "^1.4.0",
     "react-native-reanimated": "^2.3.1",
     "react-native-redash": "^16.2.3",

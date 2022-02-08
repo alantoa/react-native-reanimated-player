@@ -5708,6 +5708,11 @@ react-native-gesture-handler@1.10.3:
     invariant "^2.2.4"
     prop-types "^15.7.2"
 
+react-native-inkwell@^0.4.5:
+  version "0.4.5"
+  resolved "https://registry.yarnpkg.com/react-native-inkwell/-/react-native-inkwell-0.4.5.tgz#18144267f22ce883a1ecdb0b19b4b2c9a7a3ab3e"
+  integrity sha512-4lpk3BGOJeahzn+eglQeII18FHlkuoE0d8suinHHnNrNhq+QtqGjMz9VQCskeAbXXwMBBXnRGQup7MTWiPLK9g==
+
 react-native-orientation-locker@^1.4.0:
   version "1.4.0"
   resolved "https://registry.npmjs.org/react-native-orientation-locker/-/react-native-orientation-locker-1.4.0.tgz#ac27a0cd13d5eaaf06b0a2eed2f98f52fbac2f66"
