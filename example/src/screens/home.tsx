@@ -12,6 +12,7 @@ import { Text } from './../../src/components';
 import type { RootParamList, CustomTheme } from '../../App';
 import { palette } from '../theme/palette';
 import InkWell from 'react-native-inkwell';
+import Slider from 'react-native-awesome-slider';
 
 export const Home = () => {
   const navigate = useNavigation<NativeStackNavigationProp<RootParamList>>();
@@ -37,6 +38,7 @@ export const Home = () => {
       style={{
         backgroundColor: palette.B(1),
         flex: 1,
+        overflow: 'hidden',
       }}
       edges={['left', 'right']}>
       <VideoPlayer
