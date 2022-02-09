@@ -38,7 +38,7 @@ export const Home = () => {
         backgroundColor: palette.B(1),
         flex: 1,
       }}
-      edges={['top', 'left', 'right']}>
+      edges={['left', 'right']}>
       <VideoPlayer
         source={require('../assets/video-demo.mp4')}
         playWhenInactive
