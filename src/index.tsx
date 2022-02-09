@@ -19,7 +19,10 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  useSafeAreaInsets,
+  SafeAreaView,
+} from 'react-native-safe-area-context';
 import Video, {
   OnLoadData,
   OnProgressData,
@@ -36,6 +39,7 @@ import { Image } from 'react-native';
 import { TapControler } from './tap-controler';
 import type { TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { Ripple } from './components/ripple';
+import { clamp } from 'react-native-awesome-slider/src/utils';
 export const { width, height, scale, fontScale } = Dimensions.get('window');
 
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
@@ -151,10 +155,10 @@ const VideoPlayer: React.FC<IProps> = ({
   const autoPlayTextAnimation = useSharedValue(0);
   const doubleLeftOpacity = useSharedValue(0);
   const doubleRightOpacity = useSharedValue(0);
-
   const playAnimated = useSharedValue(0);
-
   const videoContainerInfo = useVector(videoDefaultWidth, videoDefaultHeight);
+  const videoScale = useSharedValue(1);
+  const videoTransY = useSharedValue(0);
 
   const max = useSharedValue(100);
   const min = useSharedValue(0);
@@ -162,9 +166,21 @@ const VideoPlayer: React.FC<IProps> = ({
   const isSeeking = useRef(false);
   const progress = useSharedValue(0);
 
-  const videoStyle = useAnimatedStyle(() => {
+  const containerStyle = useAnimatedStyle(() => {
     return {
       height: videoContainerInfo.y.value,
+    };
+  }, []);
+  const videoStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          scale: videoScale.value,
+        },
+        {
+          translateY: videoTransY.value,
+        },
+      ],
     };
   }, []);
 
@@ -196,6 +212,7 @@ const VideoPlayer: React.FC<IProps> = ({
   const bottomSliderStyle = useAnimatedStyle(() => {
     return {
       opacity: withTiming(bin(!fullScreen.value)),
+      top: videoContainerInfo.y.value + insets.top,
     };
   });
   const fullScreenSliderStyle = useAnimatedStyle(() => {
@@ -323,6 +340,91 @@ const VideoPlayer: React.FC<IProps> = ({
   const seekByStep = (isBack = false) => {
     seekTo(currentTime - (isBack ? 10 : -10));
   };
+
+  /**
+   * Toggle player full screen state on <Video> component
+   */
+  const toggleFullScreen = () => {
+    if (controlViewOpacity.value === 0) {
+      showControlAnimation();
+      return;
+    }
+    resetControlTimeout();
+
+    Orientation.getOrientation(orientation => {
+      if (fullScreen.value && orientation !== OrientationType.PORTRAIT) {
+        backdropOpacity.value = 0;
+        fullScreen.value = false;
+        StatusBar.setHidden(false, 'fade');
+        Orientation.lockToPortrait();
+        videoContainerInfo.x.value = videoDefaultWidth;
+        videoContainerInfo.y.value = videoDefaultHeight;
+        onExitFullscreen?.();
+      } else {
+        backdropOpacity.value = 1;
+        fullScreen.value = true;
+        StatusBar.setHidden(true, 'fade');
+        Orientation.lockToLandscape();
+        videoContainerInfo.x.value = height;
+        videoContainerInfo.y.value = width;
+        onEnterFullscreen?.();
+      }
+    });
+
+    setState({
+      ...state,
+      resizeMode: toggleResizeModeOnFullscreen
+        ? !isFullscreen
+          ? 'cover'
+          : 'contain'
+        : resizeMode,
+    });
+
+    setIsFullscreen(!isFullscreen);
+  };
+  /**
+   * onPanGesture
+   */
+  const onPanGesture = useAnimatedGestureHandler<
+    GestureEvent<PanGestureHandlerEventPayload>
+  >({
+    onStart: ({ translationY }) => {
+      controlViewOpacity.value = withTiming(0, controlAnimteConfig);
+    },
+    onActive: ({ translationY }) => {
+      if (fullScreen.value) {
+        if (translationY > 0) {
+          if (Math.abs(translationY) < 100) {
+            videoScale.value = clamp(
+              0.9,
+              1 - Math.abs(translationY) * 0.008,
+              1,
+            );
+            videoTransY.value = translationY;
+          }
+        }
+      } else {
+        if (translationY < 0) {
+          if (Math.abs(translationY) < 44) {
+            videoScale.value = Math.abs(translationY) * 0.012 + 1;
+          }
+        }
+      }
+    },
+    onEnd: ({ translationY }) => {
+      if (fullScreen.value) {
+        if (Math.abs(translationY) >= 100) {
+          runOnJS(toggleFullScreen)();
+        }
+      } else {
+        if (Math.abs(translationY) >= 44) {
+          runOnJS(toggleFullScreen)();
+        }
+      }
+      videoTransY.value = 0;
+      videoScale.value = withTiming(1);
+    },
+  });
   const singleTapHandler = useAnimatedGestureHandler<
     GestureEvent<TapGestureHandlerEventPayload>
   >({
@@ -500,12 +602,7 @@ const VideoPlayer: React.FC<IProps> = ({
     setCurrentTime(0);
     progress.value = 0;
   };
-  /**
-   * onPanGesture
-   */
-  const onPanGesture = useAnimatedGestureHandler<
-    GestureEvent<PanGestureHandlerEventPayload>
-  >({});
+
   /**
    * play the video
    */
@@ -535,47 +632,6 @@ const VideoPlayer: React.FC<IProps> = ({
     onToggleAutoPlay?.(!allowAutoPlayVideo);
   };
 
-  /**
-   * Toggle player full screen state on <Video> component
-   */
-  const toggleFullScreen = () => {
-    if (controlViewOpacity.value === 0) {
-      showControlAnimation();
-      return;
-    }
-    resetControlTimeout();
-
-    Orientation.getOrientation(orientation => {
-      if (fullScreen.value && orientation !== OrientationType.PORTRAIT) {
-        backdropOpacity.value = 0;
-        fullScreen.value = false;
-        StatusBar.setHidden(false, 'fade');
-        Orientation.lockToPortrait();
-        videoContainerInfo.x.value = videoDefaultWidth;
-        videoContainerInfo.y.value = videoDefaultHeight;
-        onExitFullscreen?.();
-      } else {
-        backdropOpacity.value = 1;
-        fullScreen.value = true;
-        StatusBar.setHidden(true, 'fade');
-        Orientation.lockToLandscape();
-        videoContainerInfo.x.value = height;
-        videoContainerInfo.y.value = width;
-        onEnterFullscreen?.();
-      }
-    });
-
-    setState({
-      ...state,
-      resizeMode: toggleResizeModeOnFullscreen
-        ? !isFullscreen
-          ? 'cover'
-          : 'contain'
-        : resizeMode,
-    });
-
-    setIsFullscreen(!isFullscreen);
-  };
   const onMoreTapHandler = () => {
     if (controlViewOpacity.value === 0) {
       showControlAnimation();
@@ -599,27 +655,37 @@ const VideoPlayer: React.FC<IProps> = ({
   return (
     <>
       <PanGestureHandler ref={pan} onGestureEvent={onPanGesture}>
-        <Animated.View style={styles.viewContainer}>
-          <Animated.View style={[styles.view, videoStyle]}>
-            <Video
-              {...rest}
-              ref={videoPlayer}
-              resizeMode={state.resizeMode}
-              volume={state.volume}
-              paused={paused}
-              muted={state.muted}
-              rate={state.rate}
-              onLoadStart={onLoadStart}
-              style={[styles.video, style]}
-              source={source}
-              onLoad={onLoad}
-              onSeek={onSeek}
-              onEnd={onEnd}
-              onProgress={onProgress}
-              fullscreenAutorotate={true}
-            />
+        <Animated.View
+          style={{
+            alignItems: 'center',
+            backgroundColor: palette.B(1),
+            elevation: 10,
+            justifyContent: 'center',
+            zIndex: 10,
+            paddingTop: insets.top,
+            overflow: 'hidden',
+          }}>
+          <Animated.View style={[styles.viewContainer]}>
+            <Animated.View style={[containerStyle, videoStyle]}>
+              <Video
+                {...rest}
+                ref={videoPlayer}
+                resizeMode={state.resizeMode}
+                volume={state.volume}
+                paused={paused}
+                muted={state.muted}
+                rate={state.rate}
+                onLoadStart={onLoadStart}
+                style={[styles.video, style]}
+                source={source}
+                onLoad={onLoad}
+                onSeek={onSeek}
+                onEnd={onEnd}
+                onProgress={onProgress}
+                fullscreenAutorotate={true}
+              />
+            </Animated.View>
             <VideoLoader loading={loading} />
-
             <TapGestureHandler
               ref={tap}
               waitFor={doubleTap}
@@ -851,41 +917,43 @@ const VideoPlayer: React.FC<IProps> = ({
                 </Ripple>
               </Animated.View>
             </TapGestureHandler>
-            <Animated.View style={[styles.slider, bottomSliderStyle]}>
-              <Slider
-                minimumTrackTintColor={palette.Main(1)}
-                maximumTrackTintColor={palette.B(0.6)}
-                cacheTrackTintColor={palette.G1(1)}
-                progress={progress}
-                onSlidingComplete={onSlidingComplete}
-                onSlidingStart={onSlidingStart}
-                minimumValue={min}
-                maximumValue={max}
-                isScrubbing={isScrubbing}
-                bubble={(value: number) => {
-                  return secondToTime(value);
-                }}
-                bubbleBackgroundColor={palette.B(0.8)}
-                disableTapEvent
-                onTap={onTapSlider}
-                thumbScaleValue={controlViewOpacity}
-                thumbWidth={12}
-                sliderHeight={2}
-              />
-            </Animated.View>
-            {isIos && (
-              <View
-                style={[styles.stopBackView, { left: -insets.left }]}
-                pointerEvents={isFullscreen ? 'auto' : 'none'}
-              />
-            )}
           </Animated.View>
+
+          {isIos && (
+            <View
+              style={[styles.stopBackView, { left: -insets.left }]}
+              pointerEvents={isFullscreen ? 'auto' : 'none'}
+            />
+          )}
         </Animated.View>
       </PanGestureHandler>
       <Animated.View
         style={[styles.backdrop, backdropStyles]}
         pointerEvents={'none'}
       />
+      <Animated.View style={[styles.slider, bottomSliderStyle]}>
+        <Slider
+          minimumTrackTintColor={palette.Main(1)}
+          maximumTrackTintColor={palette.B(0.6)}
+          cacheTrackTintColor={palette.G1(1)}
+          progress={progress}
+          onSlidingComplete={onSlidingComplete}
+          onSlidingStart={onSlidingStart}
+          minimumValue={min}
+          maximumValue={max}
+          isScrubbing={isScrubbing}
+          bubble={(value: number) => {
+            return secondToTime(value);
+          }}
+          bubbleBackgroundColor={palette.B(0.8)}
+          disableTapEvent
+          onTap={onTapSlider}
+          thumbScaleValue={controlViewOpacity}
+          thumbWidth={12}
+          sliderHeight={2}
+          style={{ left: 0, top: 0, zIndex: 100 }}
+        />
+      </Animated.View>
     </>
   );
 };
@@ -916,12 +984,11 @@ const styles = StyleSheet.create({
     maxWidth: height / 2,
   },
   slider: {
-    bottom: 0,
-    flex: 1,
-    left: 0,
-    position: 'absolute',
     width: width,
     zIndex: 100,
+    position: 'absolute',
+    left: 0,
+    right: 0,
   },
 
   stopBackView: {
@@ -943,15 +1010,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...StyleSheet.absoluteFillObject,
   },
-  view: {
-    width: '100%',
-  },
+  view: {},
   viewContainer: {
-    alignItems: 'center',
-    backgroundColor: palette.B(1),
-    elevation: 10,
-    justifyContent: 'center',
-    zIndex: 10,
+    width: '100%',
   },
   back: {
     width: 16,
@@ -1032,8 +1093,7 @@ const controlStyle = StyleSheet.create({
     right: 0,
   },
   backStep: {
-    width: 20,
-    height: 20,
-    marginBottom: 8,
+    width: 40,
+    height: 40,
   },
 });
