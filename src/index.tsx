@@ -40,6 +40,7 @@ import { TapControler } from './tap-controler';
 import type { TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { Ripple } from './components/ripple';
 import { clamp } from 'react-native-awesome-slider/src/utils';
+import RootViewBackgroundColor from 'react-native-root-view-background-color';
 export const { width, height, scale, fontScale } = Dimensions.get('window');
 
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
@@ -72,6 +73,9 @@ interface IProps extends VideoProperties {
   onToggleAutoPlay?: (state: boolean) => void;
   onTapMore?: () => void;
   doubleTapInterval?: number;
+  onPanStartEvent?: (ctx: PanGestureHandlerEventPayload) => void;
+  onPanEvent?: (ctx: PanGestureHandlerEventPayload) => void;
+  onPanEndEvent?: (ctx: PanGestureHandlerEventPayload) => void;
 }
 
 const VideoPlayer: React.FC<IProps> = ({
@@ -100,11 +104,15 @@ const VideoPlayer: React.FC<IProps> = ({
   onToggleAutoPlay,
   onTapMore,
   doubleTapInterval = 500,
+  onPanStartEvent,
+  onPanEvent,
+  onPanEndEvent,
   ...rest
 }) => {
   /**
    * hooks
    */
+  RootViewBackgroundColor.setBackground(0, 0, 0, 1);
   const insets = useSafeAreaInsets();
   const insetsRef = useRef(insets);
   const dimensions = useWindowDimensions();
@@ -271,6 +279,7 @@ const VideoPlayer: React.FC<IProps> = ({
   useEffect(() => {
     mounted.current = true;
     Orientation.lockToPortrait();
+    StatusBar.setBarStyle('light-content');
     initPaused ? pause() : play();
     const unBeforeRemove = navigation?.addListener('beforeRemove', (e: any) => {
       e?.preventDefault();
@@ -352,22 +361,12 @@ const VideoPlayer: React.FC<IProps> = ({
     resetControlTimeout();
 
     Orientation.getOrientation(orientation => {
-      if (fullScreen.value && orientation !== OrientationType.PORTRAIT) {
-        backdropOpacity.value = 0;
-        fullScreen.value = false;
+      if (fullScreen.value || orientation !== OrientationType.PORTRAIT) {
+        exitFullScreen();
         StatusBar.setHidden(false, 'fade');
-        Orientation.lockToPortrait();
-        videoContainerInfo.x.value = videoDefaultWidth;
-        videoContainerInfo.y.value = videoDefaultHeight;
-        onExitFullscreen?.();
       } else {
-        backdropOpacity.value = 1;
-        fullScreen.value = true;
+        enterFullScreen();
         StatusBar.setHidden(true, 'fade');
-        Orientation.lockToLandscape();
-        videoContainerInfo.x.value = height;
-        videoContainerInfo.y.value = width;
-        onEnterFullscreen?.();
       }
     });
 
@@ -379,22 +378,49 @@ const VideoPlayer: React.FC<IProps> = ({
           : 'contain'
         : resizeMode,
     });
-
     setIsFullscreen(!isFullscreen);
   };
+
+  const enterFullScreen = () => {
+    backdropOpacity.value = 1;
+    Orientation.lockToLandscape();
+    fullScreen.value = true;
+    videoContainerInfo.x.value = height;
+    videoContainerInfo.y.value = width;
+    onEnterFullscreen?.();
+  };
+
+  const exitFullScreen = () => {
+    Orientation.lockToPortrait();
+    fullScreen.value = false;
+    videoContainerInfo.x.value = videoDefaultWidth;
+    videoContainerInfo.y.value = videoDefaultHeight;
+    onExitFullscreen?.();
+    backdropOpacity.value = 0;
+  };
   /**
-   * onPanGesture
+   * on pan event
    */
   const onPanGesture = useAnimatedGestureHandler<
-    GestureEvent<PanGestureHandlerEventPayload>
+    GestureEvent<PanGestureHandlerEventPayload>,
+    {
+      isVertical: boolean;
+    }
   >({
-    onStart: ({ translationY }) => {
-      controlViewOpacity.value = withTiming(0, controlAnimteConfig);
+    onStart: ({ velocityY, velocityX, ...rest }, ctx) => {
+      if (onPanStartEvent) {
+        runOnJS(onPanStartEvent)({ velocityX, velocityY, ...rest });
+      }
+      ctx.isVertical = Math.abs(velocityY) > Math.abs(velocityX);
+      controlViewOpacity.value = withTiming(0, { duration: 100 });
     },
-    onActive: ({ translationY }) => {
-      if (fullScreen.value) {
-        if (translationY > 0) {
-          if (Math.abs(translationY) < 100) {
+    onActive: ({ translationY, ...rest }, ctx) => {
+      if (onPanEvent) {
+        runOnJS(onPanEvent)({ translationY, ...rest });
+      }
+      if (ctx.isVertical) {
+        if (fullScreen.value) {
+          if (translationY > 0 && Math.abs(translationY) < 100) {
             videoScale.value = clamp(
               0.9,
               1 - Math.abs(translationY) * 0.008,
@@ -402,29 +428,31 @@ const VideoPlayer: React.FC<IProps> = ({
             );
             videoTransY.value = translationY;
           }
-        }
-      } else {
-        if (translationY < 0) {
-          if (Math.abs(translationY) < 44) {
+        } else {
+          if (translationY < 0 && Math.abs(translationY) < 40) {
             videoScale.value = Math.abs(translationY) * 0.012 + 1;
           }
         }
       }
     },
-    onEnd: ({ translationY }) => {
+    onEnd: ({ translationY, ...rest }) => {
+      if (onPanStartEvent) {
+        runOnJS(onPanStartEvent)({ translationY, ...rest });
+      }
       if (fullScreen.value) {
         if (Math.abs(translationY) >= 100) {
-          runOnJS(toggleFullScreen)();
+          runOnJS(exitFullScreen)();
         }
       } else {
-        if (Math.abs(translationY) >= 44) {
-          runOnJS(toggleFullScreen)();
+        if (Math.abs(translationY) >= 40) {
+          runOnJS(enterFullScreen)();
         }
       }
       videoTransY.value = 0;
       videoScale.value = withTiming(1);
     },
   });
+
   const singleTapHandler = useAnimatedGestureHandler<
     GestureEvent<TapGestureHandlerEventPayload>
   >({
@@ -494,11 +522,14 @@ const VideoPlayer: React.FC<IProps> = ({
       showControlAnimation();
       return;
     }
-    if (fullScreen.value) {
-      toggleFullScreen();
-    } else {
-      onTapBack?.();
-    }
+    Orientation.getOrientation(orientation => {
+      if (fullScreen.value || orientation !== OrientationType.PORTRAIT) {
+        exitFullScreen();
+        StatusBar.setHidden(false, 'fade');
+      } else {
+        onTapBack?.();
+      }
+    });
   };
 
   /**
@@ -654,17 +685,13 @@ const VideoPlayer: React.FC<IProps> = ({
 
   return (
     <>
-      <PanGestureHandler ref={pan} onGestureEvent={onPanGesture}>
-        <Animated.View
-          style={{
-            alignItems: 'center',
-            backgroundColor: palette.B(1),
-            elevation: 10,
-            justifyContent: 'center',
-            zIndex: 10,
-            paddingTop: insets.top,
-            overflow: 'hidden',
-          }}>
+      <PanGestureHandler
+        ref={pan}
+        onGestureEvent={onPanGesture}
+        minDist={10}
+        minPointers={1}
+        maxPointers={1}>
+        <Animated.View style={[styles.container, { paddingTop: insets.top }]}>
           <Animated.View style={[styles.viewContainer]}>
             <Animated.View style={[containerStyle, videoStyle]}>
               <Video
@@ -724,8 +751,8 @@ const VideoPlayer: React.FC<IProps> = ({
                           <Text
                             tx={
                               allowAutoPlayVideo
-                                ? `自动播放已开启`
-                                : '自动播放已关闭'
+                                ? `Autoplay is on`
+                                : 'Autoplay is off'
                             }
                             t4
                             color={'#fff'}
@@ -888,7 +915,7 @@ const VideoPlayer: React.FC<IProps> = ({
                       loop
                       style={controlStyle.backStep}
                     />
-                    <Text tx="back 10s" color={palette.W(1)} t5 />
+                    <Text tx="10s" isCenter color={palette.W(1)} t5 />
                   </Animated.View>
                 </Ripple>
 
@@ -912,7 +939,7 @@ const VideoPlayer: React.FC<IProps> = ({
                         { transform: [{ rotate: '90deg' }] },
                       ]}
                     />
-                    <Text tx="ahead 10s" color={palette.W(1)} t5 />
+                    <Text tx="10s" isCenter color={palette.W(1)} t5 />
                   </Animated.View>
                 </Ripple>
               </Animated.View>
@@ -1026,6 +1053,14 @@ const styles = StyleSheet.create({
   more: {
     width: 24,
     height: 24,
+  },
+  container: {
+    alignItems: 'center',
+    backgroundColor: palette.B(1),
+    elevation: 10,
+    justifyContent: 'center',
+    zIndex: 10,
+    overflow: 'hidden',
   },
 });
 

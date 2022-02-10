@@ -278,6 +278,8 @@ PODS:
     - glog
   - react-native-orientation-locker (1.4.0):
     - React-Core
+  - react-native-root-view-background-color (1.0.2):
+    - React
   - react-native-safe-area-context (3.3.2):
     - React-Core
   - react-native-video (5.2.0):
@@ -430,6 +432,7 @@ DEPENDENCIES:
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - react-native-orientation-locker (from `../node_modules/react-native-orientation-locker`)
+  - react-native-root-view-background-color (from `../node_modules/react-native-root-view-background-color`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-video (from `../node_modules/react-native-video`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -506,6 +509,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/logger"
   react-native-orientation-locker:
     :path: "../node_modules/react-native-orientation-locker"
+  react-native-root-view-background-color:
+    :path: "../node_modules/react-native-root-view-background-color"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-video:
@@ -577,6 +582,7 @@ SPEC CHECKSUMS:
   React-jsinspector: d0374f7509d407d2264168b6d0fad0b54e300b85
   React-logger: 933f80c97c633ee8965d609876848148e3fef438
   react-native-orientation-locker: 2da91e5391971dace445495821c899c111dcad7a
+  react-native-root-view-background-color: e7ba21b82c8b7b2a1f902750f08c9dc1a5b38cea
   react-native-safe-area-context: 584dc04881deb49474363f3be89e4ca0e854c057
   react-native-video: a4c2635d0802f983594b7057e1bce8f442f0ad28
   React-perflogger: 93075d8931c32cd1fce8a98c15d2d5ccc4d891bd

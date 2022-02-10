@@ -1,7 +1,7 @@
 import { useNavigation, useTheme } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useRef } from 'react';
-import { Alert, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import {
   useSafeAreaInsets,
@@ -11,8 +11,6 @@ import VideoPlayer from 'react-native-video-player';
 import { Text } from './../../src/components';
 import type { RootParamList, CustomTheme } from '../../App';
 import { palette } from '../theme/palette';
-import InkWell from 'react-native-inkwell';
-import Slider from 'react-native-awesome-slider';
 
 export const Home = () => {
   const navigate = useNavigation<NativeStackNavigationProp<RootParamList>>();
@@ -50,13 +48,16 @@ export const Home = () => {
           'Billie Eilish - Bad Guy - When We All Fall Asleep, Where Do We Go?'
         }
         onTapBack={() => {
-          Alert.alert('onTapBack');
+          console.log('onTapBack');
         }}
         onTapMore={() => {
-          Alert.alert('onTapMore');
+          console.log('onTapMore');
         }}
         onToggleAutoPlay={(state: boolean) => {
-          Alert.alert(`onToggleAutoPlay state: ${state}`);
+          console.log(`onToggleAutoPlay state: ${state}`);
+        }}
+        onPanEvent={({ translationY }) => {
+          // console.log(`onPanEvent translationY: ${translationY}`);
         }}
         initPaused={true}
       />
@@ -81,21 +82,6 @@ export const Home = () => {
               h4
               color={theme.dark ? palette.G2(1) : palette.G7(1)}
             />
-            <InkWell
-              style={{
-                width: 200,
-                height: 200,
-                backgroundColor: 'white',
-              }}
-              contentContainerStyle={{
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              onDoubleTap={() => {
-                console.log('tapped');
-              }}>
-              <Text>Tap Here</Text>
-            </InkWell>
           </View>
         </ScrollView>
       </View>

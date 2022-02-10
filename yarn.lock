@@ -7435,6 +7435,10 @@ react-native-reanimated@2.1.0:
     mockdate "^3.0.2"
     string-hash-64 "^1.0.3"
 
+"react-native-root-view-background-color@git+https://github.com/alantoa/react-native-root-view-background-color":
+  version "1.0.2"
+  resolved "git+https://github.com/alantoa/react-native-root-view-background-color#f08ba172ef6c2cf051975f574bdbf0cf2b326f27"
+
 react-native-safe-area-context@^3.3.2:
   version "3.3.2"
   resolved "https://registry.npmjs.org/react-native-safe-area-context/-/react-native-safe-area-context-3.3.2.tgz#9549a2ce580f2374edb05e49d661258d1b8bcaed"
