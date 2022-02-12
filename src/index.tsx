@@ -19,10 +19,7 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
-import {
-  useSafeAreaInsets,
-  SafeAreaView,
-} from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Video, {
   OnLoadData,
   OnProgressData,
@@ -40,7 +37,7 @@ import { TapControler } from './tap-controler';
 import type { TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { Ripple } from './components/ripple';
 import { clamp } from 'react-native-awesome-slider/src/utils';
-import RootViewBackgroundColor from 'react-native-root-view-background-color';
+import RootViewBackgroundColor from 'react-native-set-rootview-bgcolor';
 export const { width, height, scale, fontScale } = Dimensions.get('window');
 
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
@@ -112,7 +109,7 @@ const VideoPlayer: React.FC<IProps> = ({
   /**
    * hooks
    */
-  RootViewBackgroundColor.setBackground(0, 0, 0, 1);
+  RootViewBackgroundColor?.setBackground(0, 0, 0, 1);
   const insets = useSafeAreaInsets();
   const insetsRef = useRef(insets);
   const dimensions = useWindowDimensions();
@@ -411,27 +408,23 @@ const VideoPlayer: React.FC<IProps> = ({
       if (onPanStartEvent) {
         runOnJS(onPanStartEvent)({ velocityX, velocityY, ...rest });
       }
-      ctx.isVertical = Math.abs(velocityY) > Math.abs(velocityX);
+
+      // ctx.isVertical = Math.abs(velocityY) > Math.abs(velocityX);
       controlViewOpacity.value = withTiming(0, { duration: 100 });
     },
     onActive: ({ translationY, ...rest }, ctx) => {
       if (onPanEvent) {
         runOnJS(onPanEvent)({ translationY, ...rest });
       }
-      if (ctx.isVertical) {
-        if (fullScreen.value) {
-          if (translationY > 0 && Math.abs(translationY) < 100) {
-            videoScale.value = clamp(
-              0.9,
-              1 - Math.abs(translationY) * 0.008,
-              1,
-            );
-            videoTransY.value = translationY;
-          }
-        } else {
-          if (translationY < 0 && Math.abs(translationY) < 40) {
-            videoScale.value = Math.abs(translationY) * 0.012 + 1;
-          }
+      // if (!ctx.isVertical) return;
+      if (fullScreen.value) {
+        if (translationY > 0 && Math.abs(translationY) < 100) {
+          videoScale.value = clamp(0.9, 1 - Math.abs(translationY) * 0.008, 1);
+          videoTransY.value = translationY;
+        }
+      } else {
+        if (translationY < 0 && Math.abs(translationY) < 40) {
+          videoScale.value = Math.abs(translationY) * 0.012 + 1;
         }
       }
     },
@@ -524,6 +517,7 @@ const VideoPlayer: React.FC<IProps> = ({
     }
     Orientation.getOrientation(orientation => {
       if (fullScreen.value || orientation !== OrientationType.PORTRAIT) {
+        setIsFullscreen(false);
         exitFullScreen();
         StatusBar.setHidden(false, 'fade');
       } else {
@@ -781,7 +775,8 @@ const VideoPlayer: React.FC<IProps> = ({
                         styles.topControls,
                         styles.topFullscreenControls,
                         topFullscreenControlStyle,
-                      ]}>
+                      ]}
+                      pointerEvents={isFullscreen ? 'auto' : 'none'}>
                       <View style={controlStyle.line}>
                         <TapControler onPress={onBackTapHandler}>
                           <Image

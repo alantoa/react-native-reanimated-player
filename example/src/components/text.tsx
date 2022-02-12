@@ -1,12 +1,7 @@
+import { useTheme } from '@react-navigation/native';
 import React from 'react';
-import { TextProps } from 'react-native';
-import {
-  Platform,
-  StyleSheet,
-  Text as NativeText,
-  TextStyle,
-} from 'react-native';
-import { palette } from '../../../src/theme/palette';
+import type { TextProps } from 'react-native';
+import { Platform, StyleSheet, Text as NativeText } from 'react-native';
 const normalize = (size: number) => size;
 export interface _TextProps extends TextProps {
   h1?: boolean;
@@ -43,19 +38,20 @@ export const Text = React.forwardRef<NativeText, _TextProps>(function Text(
     children = '',
     tx = '',
     verticalCenter = false,
-    color = palette.G7(1),
+    color,
     isCenter,
     paragraph,
     ...rest
   },
   ref,
 ) {
+  const { colors } = useTheme();
   return (
     <NativeText
       ref={ref}
       style={StyleSheet.flatten([
         styles.text,
-        { color },
+        { color: color ?? colors.text },
         isCenter && styles.textCenter,
 
         (t1 || t2 || t3 || t4 || t5) && tBold && styles.enTBold,

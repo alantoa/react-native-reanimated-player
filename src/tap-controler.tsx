@@ -1,17 +1,14 @@
 import {
-  GestureEvent,
   TapGestureHandler,
   TapGestureHandlerProps,
-  TapGestureHandlerEventPayload,
-  PanGestureHandler,
-  PanGestureHandlerEventPayload,
-  TouchableWithoutFeedback,
 } from 'react-native-gesture-handler';
 import React from 'react';
 import type { StyleProp } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { hitSlop } from './constants';
+
+const hitSlop = { left: 8, bottom: 4, right: 8, top: 4 };
+
 type TapControlerProps = TapGestureHandlerProps & {
   onPress: () => void;
   style?: StyleProp<ViewStyle>;

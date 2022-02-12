@@ -278,7 +278,7 @@ PODS:
     - glog
   - react-native-orientation-locker (1.4.0):
     - React-Core
-  - react-native-root-view-background-color (1.0.2):
+  - react-native-root-view-background-color (2.0.0):
     - React
   - react-native-safe-area-context (3.3.2):
     - React-Core
@@ -385,6 +385,8 @@ PODS:
   - RNScreens (3.10.1):
     - React-Core
     - React-RCTImage
+  - RNSVG (12.1.1):
+    - React
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
     - Yoga (~> 1.14)
@@ -432,7 +434,7 @@ DEPENDENCIES:
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - react-native-orientation-locker (from `../node_modules/react-native-orientation-locker`)
-  - react-native-root-view-background-color (from `../node_modules/react-native-root-view-background-color`)
+  - react-native-root-view-background-color (from `../node_modules/react-native-set-rootview-bgcolor`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-video (from `../node_modules/react-native-video`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -450,6 +452,7 @@ DEPENDENCIES:
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
+  - RNSVG (from `../node_modules/react-native-svg`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -510,7 +513,7 @@ EXTERNAL SOURCES:
   react-native-orientation-locker:
     :path: "../node_modules/react-native-orientation-locker"
   react-native-root-view-background-color:
-    :path: "../node_modules/react-native-root-view-background-color"
+    :path: "../node_modules/react-native-set-rootview-bgcolor"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-video:
@@ -545,6 +548,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
     :path: "../node_modules/react-native-screens"
+  RNSVG:
+    :path: "../node_modules/react-native-svg"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -582,7 +587,7 @@ SPEC CHECKSUMS:
   React-jsinspector: d0374f7509d407d2264168b6d0fad0b54e300b85
   React-logger: 933f80c97c633ee8965d609876848148e3fef438
   react-native-orientation-locker: 2da91e5391971dace445495821c899c111dcad7a
-  react-native-root-view-background-color: e7ba21b82c8b7b2a1f902750f08c9dc1a5b38cea
+  react-native-root-view-background-color: d1933b69949e931aadc9c4f06e0a94d15d493516
   react-native-safe-area-context: 584dc04881deb49474363f3be89e4ca0e854c057
   react-native-video: a4c2635d0802f983594b7057e1bce8f442f0ad28
   React-perflogger: 93075d8931c32cd1fce8a98c15d2d5ccc4d891bd
@@ -600,6 +605,7 @@ SPEC CHECKSUMS:
   RNGestureHandler: a479ebd5ed4221a810967000735517df0d2db211
   RNReanimated: da3860204e5660c0dd66739936732197d359d753
   RNScreens: 522705f2e5c9d27efb17f24aceb2bf8335bc7b8e
+  RNSVG: 551acb6562324b1d52a4e0758f7ca0ec234e278f
   Yoga: e7dc4e71caba6472ff48ad7d234389b91dadc280
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 

@@ -50,7 +50,7 @@
   "homepage": "https://github.com/MonsterAnan/react-native-video-player",
   "dependencies": {
     "lodash.padstart": "^4.6.1",
-    "react-native-root-view-background-color": "git+https://github.com/alantoa/react-native-root-view-background-color"
+    "react-native-set-rootview-bgcolor": "^2.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
@@ -73,7 +73,7 @@
     "react-native": "0.66.4",
     "react-native-awesome-slider": "^0.1.14",
     "react-native-builder-bob": "^0.18.2",
-    "react-native-gesture-handler": "^1.10.1",
+    "react-native-gesture-handler": "1.10.3",
     "react-native-orientation-locker": "*",
     "react-native-reanimated": "2.1.0",
     "react-native-safe-area-context": "^3.3.2",
@@ -91,8 +91,8 @@
     "react-native-gesture-handler": "*",
     "react-native-orientation-locker": "*",
     "react-native-reanimated": ">2",
-    "react-native-root-view-background-color": ">1",
     "react-native-safe-area-context": "*",
+    "react-native-set-rootview-bgcolor": "*",
     "react-native-video": "*"
   },
   "jest": {
