@@ -14,17 +14,21 @@
 
 ## Installation
 
-First you have to follow installation instructions of [Reanimated v2](https://docs.swmansion.com/react-native-reanimated/) and [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/)
+First you have to follow installation instructions of:
+- [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/) 
+- [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/)
+- [react-native-orientation-locker](https://github.com/wonday/react-native-orientation-locker/)
+
 
 ```sh
-yarn add react-native-video-player
+yarn add react-native-reanimated-player
 ```
 
 
 ## Example usage
 
 ```jsx
-import VideoPlayer from 'react-native-video-player';
+import VideoPlayer from 'react-native-reanimated-player';
 
 export const Example = () => {
     return (
