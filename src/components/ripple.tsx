@@ -1,22 +1,12 @@
 import React, { useImperativeHandle, useState } from 'react';
-import type { StyleProp } from 'react-native';
-import type { ViewStyle } from 'react-native';
-import { Dimensions } from 'react-native';
-import { StyleSheet, View } from 'react-native';
-import type { TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
-import type { GestureEvent } from 'react-native-gesture-handler';
-import { State, TapGestureHandler } from 'react-native-gesture-handler';
+import type { StyleProp, ViewStyle } from 'react-native';
+import { View } from 'react-native';
 import Animated, {
-  Easing,
-  measure,
   runOnJS,
-  useAnimatedGestureHandler,
-  useAnimatedRef,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { width } from 'react-native-video-player';
 export type RippleTargetEvent = { x: number; y: number };
 
 type RippleBtnProps = {

@@ -1,10 +1,9 @@
+import React from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
 import {
   TapGestureHandler,
   TapGestureHandlerProps,
 } from 'react-native-gesture-handler';
-import React from 'react';
-import type { StyleProp } from 'react-native';
-import type { ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 const hitSlop = { left: 8, bottom: 4, right: 8, top: 4 };

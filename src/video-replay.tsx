@@ -24,7 +24,7 @@ export const VideoReplayed = React.memo<Props>(function VideoReplayed({
   if (!isPlayed) return null;
   return (
     <View style={STYLE}>
-      <Button onPress={onPress} title={`重新播放`} />
+      <Button onPress={onPress} title={`replay`} />
     </View>
   );
 });

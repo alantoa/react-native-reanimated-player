@@ -1,7 +1,7 @@
 {
-  "name": "react-native-video-player",
+  "name": "react-native-reanimated-player",
   "version": "0.0.1",
-  "description": "react-native-video-player",
+  "description": "A react-native video player that interacts like Youtube player, built upon Reanimted v2 & react-native-gesture-handle",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
@@ -118,5 +118,19 @@
         "preset": "angular"
       }
     }
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
+    ]
   }
 }

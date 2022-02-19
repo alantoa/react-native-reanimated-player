@@ -1,12 +1,21 @@
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { StatusBar, StyleSheet, View, useWindowDimensions } from 'react-native';
+import {
+  Dimensions,
+  Image,
+  StatusBar,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { Slider } from 'react-native-awesome-slider/src/index';
+import { clamp } from 'react-native-awesome-slider/src/utils';
+import type { TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import {
   GestureEvent,
-  TapGestureHandler,
   PanGestureHandler,
   PanGestureHandlerEventPayload,
+  TapGestureHandler,
 } from 'react-native-gesture-handler';
 import Orientation, { OrientationType } from 'react-native-orientation-locker';
 import Animated, {
@@ -20,24 +29,20 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import RootViewBackgroundColor from 'react-native-set-rootview-bgcolor';
 import Video, {
   OnLoadData,
   OnProgressData,
   OnSeekData,
   VideoProperties,
 } from 'react-native-video';
-import { VideoLoader } from './video-loading';
-import { secondToTime, formatTimeToMins, formatTime } from './video-utils';
-import { bin, isIos, useRefs, useVector } from './utils';
-import { Dimensions } from 'react-native';
-import { palette } from './theme/palette';
 import { Text } from './components';
-import { Image } from 'react-native';
-import { TapControler } from './tap-controler';
-import type { TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import { Ripple } from './components/ripple';
-import { clamp } from 'react-native-awesome-slider/src/utils';
-import RootViewBackgroundColor from 'react-native-set-rootview-bgcolor';
+import { TapControler } from './tap-controler';
+import { palette } from './theme/palette';
+import { bin, isIos, useRefs, useVector } from './utils';
+import { VideoLoader } from './video-loading';
+import { formatTime, formatTimeToMins, secondToTime } from './video-utils';
 export const { width, height, scale, fontScale } = Dimensions.get('window');
 
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
@@ -404,7 +409,7 @@ const VideoPlayer: React.FC<IProps> = ({
       isVertical: boolean;
     }
   >({
-    onStart: ({ velocityY, velocityX, ...rest }, ctx) => {
+    onStart: ({ velocityY, velocityX, ...rest }) => {
       if (onPanStartEvent) {
         runOnJS(onPanStartEvent)({ velocityX, velocityY, ...rest });
       }
@@ -412,7 +417,7 @@ const VideoPlayer: React.FC<IProps> = ({
       // ctx.isVertical = Math.abs(velocityY) > Math.abs(velocityX);
       controlViewOpacity.value = withTiming(0, { duration: 100 });
     },
-    onActive: ({ translationY, ...rest }, ctx) => {
+    onActive: ({ translationY, ...rest }) => {
       if (onPanEvent) {
         runOnJS(onPanEvent)({ translationY, ...rest });
       }
