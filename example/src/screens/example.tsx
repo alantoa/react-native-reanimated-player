@@ -1,6 +1,12 @@
+import {
+  BottomSheetBackdrop,
+  BottomSheetModal,
+  BottomSheetModalProvider,
+  BottomSheetScrollView,
+} from '@gorhom/bottom-sheet';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   Alert,
   Dimensions,
@@ -16,20 +22,14 @@ import {
 } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import {
-  useSafeAreaInsets,
   SafeAreaView,
+  useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import VideoPlayer from 'react-native-video-player';
-import { Text, ThemeView } from '../components';
+import VideoPlayer, { VideoPlayerRef } from '../../../src';
 import type { RootParamList } from '../../App';
-import { palette } from '../theme/palette';
-import {
-  BottomSheetBackdrop,
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  BottomSheetScrollView,
-} from '@gorhom/bottom-sheet';
+import { Text, ThemeView } from '../components';
 import Chevrondown from '../components/svg-icon/Chevrondown';
+import { palette } from '../theme/palette';
 const px2dp = (px: number) => PixelRatio.roundToNearestPixel(px);
 export const { width, height, scale, fontScale } = Dimensions.get('window');
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
@@ -66,8 +66,9 @@ export const Example = () => {
   const fullViewHeight = height - VIDEO_DEFAULT_HEIGHT - insets.top;
   const index = useRef(0);
   const indexValue = useSharedValue(0);
-
+  const videoPlayerRef = useRef<VideoPlayerRef>(null);
   const onOpen = () => {
+    videoPlayerRef.current?.setPause();
     bottomSheetModalRef.current?.present();
   };
   const renderBackdrop = useCallback(
@@ -112,6 +113,7 @@ export const Example = () => {
         }}
         initPaused={true}
         videoDefaultHeight={VIDEO_DEFAULT_HEIGHT}
+        ref={videoPlayerRef}
       />
       <BottomSheetModalProvider>
         <View
