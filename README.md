@@ -1,5 +1,3 @@
-# ⚠️ Deving, This library is work in progress!
-
 <div align="center">
   <blockquote><i>`JSThread` to `JSThread`, `UIThread` to `UIThread`.</i></blockquote>
   <h1 align="center">React Native Awesome Video Player</h1>
