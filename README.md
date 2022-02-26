@@ -13,6 +13,7 @@
 ## Installation
 
 First you have to follow installation instructions of:
+- [react-native-awesome-slider](https://github.com/alantoa/react-native-awesome-slider/) 
 - [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/) 
 - [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/)
 - [react-native-orientation-locker](https://github.com/wonday/react-native-orientation-locker/)
