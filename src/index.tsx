@@ -62,18 +62,13 @@ const AnimatedLottieView = Animated.createAnimatedComponent(LottieView);
 
 export type IProps = VideoProperties & {
   showOnStart?: boolean;
-  showTimeRemaining?: boolean;
-  showHours?: boolean;
-  disableTimer?: boolean;
-  disableSeekbar?: boolean;
-  disablePlayPause?: boolean;
   toggleResizeModeOnFullscreen?: boolean;
   onEnterFullscreen?: () => void;
   onExitFullscreen?: () => void;
   controlTimeout?: number;
   videoDefaultHeight?: number;
   videoDefaultWidth?: number;
-  headerTitle?: string;
+  headerBarTitle?: string;
   onTapBack?: () => void;
   navigation?: any;
   initPaused?: boolean;
@@ -89,6 +84,7 @@ export type VideoPlayerRef = {
   setPlay: () => void;
   setPause: () => void;
 };
+
 const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
   (
     {
@@ -97,11 +93,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
       muted = false,
       volume = 1,
       rate = 1,
-      showHours = false,
       source,
-      disableTimer,
-      disableSeekbar = false,
-      disablePlayPause = false,
       style,
       toggleResizeModeOnFullscreen = true,
       onEnterFullscreen,
@@ -109,7 +101,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
       controlTimeout = 2000,
       videoDefaultHeight = VIDEO_DEFAULT_HEIGHT,
       videoDefaultWidth = width,
-      headerTitle = '',
+      headerBarTitle = '',
       onTapBack,
       navigation,
       initPaused = false,
@@ -148,7 +140,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
       volume: volume,
       rate: rate,
       // Controls
-      showHours: showHours,
       error: false,
       showRemainingTime: false,
     });
@@ -820,10 +811,10 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
                           </TapControler>
 
                           <Text
-                            tx={headerTitle}
+                            tx={headerBarTitle}
                             h5
                             numberOfLines={1}
-                            style={styles.headerTitle}
+                            style={styles.headerBarTitle}
                             color={palette.W(1)}
                           />
                         </View>
@@ -1036,7 +1027,7 @@ const styles = StyleSheet.create({
   fullscreen: {
     ...StyleSheet.absoluteFillObject,
   },
-  headerTitle: {
+  headerBarTitle: {
     marginLeft: 20,
     maxWidth: height / 2,
   },

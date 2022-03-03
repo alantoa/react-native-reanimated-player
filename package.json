@@ -68,7 +68,7 @@
     "babel-jest": "^26.6.3",
     "eslint": "^7.14.0",
     "jest": "^26.6.3",
-    "lottie-react-native": "*",
+    "lottie-react-native": "^5.0.1",
     "metro-react-native-babel-preset": "^0.66.2",
     "react-native": "0.66.4",
     "react-native-awesome-slider": "^0.1.14",

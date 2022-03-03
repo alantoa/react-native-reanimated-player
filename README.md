@@ -63,5 +63,142 @@ export const Example = () => {
 - ...and more
 ## Configuration
 
-...
+The `<VideoPlayer/>` component has the following configuration properties:
+
+<table>
+  <tr>
+    <td>Name</td>
+    <td>Type</td>
+    <td>Description</td>
+    <td>Required</td>
+    <td>Default Value</td>
+  </tr>
+  <tr>
+    <td>showOnStart</td>
+    <td>boolean</td>
+    <td>control view init show</td>
+    <td>❌</td>
+    <td>false</td>
+  </tr>
+  <tr>
+    <td>toggleResizeModeOnFullscreen</td>
+    <td>boolean</td>
+    <td>toggle resizeMode on fullscreen?</td>
+    <td>❌</td>
+    <td>true</td>
+  </tr>
+  <tr>
+    <td>onEnterFullscreen</td>
+    <td>function</td>
+    <td>on enter fullscreen callback</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+  <tr>
+    <td>onExitFullscreen</td>
+    <td>function</td>
+    <td>on exit fullscreen callback</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+  <tr>
+    <td>controlTimeout</td>
+    <td>nubmer</td>
+    <td>How long to hide the control view after showing</td>
+    <td>❌</td>
+    <td>2000</td>
+  </tr>
+  <tr>
+    <td>videoDefaultHeight</td>
+    <td>number</td>
+    <td>video default height</td>
+    <td>❌</td>
+    <td>screenWidth * (9 / 16)</td>
+  </tr>
+  <tr>
+    <td>videoDefaultWidth</td>
+    <td>number</td>
+    <td>video default height</td>
+    <td>❌</td>
+    <td>screenWidth</td>
+  </tr>
+  <tr>
+    <td>headerBarTitle</td>
+    <td>string</td>
+    <td>header bar title on fullscreen mode</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+  <tr>
+    <td>onTapBack</td>
+    <td>function</td>
+    <td>tap header bar Icon-'Back' callback</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+  <tr>
+    <td>headerBarTitle</td>
+    <td>string</td>
+    <td>headerbar title on fullscreen mode</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+  <tr>
+    <td>navigation</td>
+    <td>any</td>
+    <td>navigation</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+  <tr>
+    <td>initPaused</td>
+    <td>boolean</td>
+    <td>player init paused</td>
+    <td>❌</td>
+    <td>false</td>
+  </tr>
+  <tr>
+    <td>autoPlay</td>
+    <td>boolean</td>
+    <td>auto play</td>
+    <td>❌</td>
+    <td>false</td>
+  </tr>
+  <tr>
+    <td>onToggleAutoPlay</td>
+    <td>function</td>
+    <td>on toggle auto play</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+  <tr>
+    <td>onTapMore</td>
+    <td>function</td>
+    <td>tap headerbar Icon-'More' callback</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+  <tr>
+    <td>onPanStartEvent</td>
+    <td>function</td>
+    <td>on pan start play event callback</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+  <tr>
+    <td>onPanEvent</td>
+    <td>function</td>
+    <td>on pan play event callback</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+  <tr>
+    <td>onPanEndEvent</td>
+    <td>function</td>
+    <td>on pan end play event callback</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+</table>
+
 
