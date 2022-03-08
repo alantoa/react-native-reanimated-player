@@ -7447,11 +7447,6 @@ react-native-safe-modules@^1.0.3:
   dependencies:
     dedent "^0.6.0"
 
-react-native-set-rootview-bgcolor@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/react-native-set-rootview-bgcolor/-/react-native-set-rootview-bgcolor-2.0.0.tgz#58a24eceba0b5619de883aeb30e03110897a4829"
-  integrity sha512-rafz7yELKjV9XwZKqme1di48QVZwCnq/t2TcbW1ypkvhTE+tGj6rjoz4ewmNZ73BkPWwDlG8NKapLvlvEsVmPQ==
-
 react-native-video@^5.2.0:
   version "5.2.0"
   resolved "https://registry.npmjs.org/react-native-video/-/react-native-video-5.2.0.tgz#c3f2c541775f4fda7e0d26d75a6fb59819b13d5e"

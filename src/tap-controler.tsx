@@ -17,7 +17,6 @@ export const TapControler: React.FC<TapControlerProps> = ({
   onPress,
   style,
   children,
-
   ...rest
 }) => {
   return (

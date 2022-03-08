@@ -14,6 +14,7 @@ import {
   ImageStyle,
   PixelRatio,
   ScrollView,
+  StatusBar,
   StyleProp,
   StyleSheet,
   TouchableHighlight,
@@ -101,7 +102,7 @@ export const Example = () => {
         playWhenInactive
         posterResizeMode="cover"
         ignoreSilentSwitch="ignore"
-        headerTitle={videoInfo.title}
+        headerBarTitle={videoInfo.title}
         onTapBack={() => {
           Alert.alert('onTapBack');
         }}
