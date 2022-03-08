@@ -424,14 +424,14 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
         if (onPanStartEvent) {
           runOnJS(onPanStartEvent)({ velocityX, velocityY, ...rest });
         }
-        // ctx.isVertical = Math.abs(velocityY) > Math.abs(velocityX);
+        ctx.isVertical = Math.abs(velocityY) > Math.abs(velocityX);
       },
       onActive: ({ translationY, ...rest }, ctx) => {
         if (onPanEvent) {
           runOnJS(onPanEvent)({ translationY, ...rest });
         }
 
-        // if (!ctx.isVertical) return;
+        if (!ctx.isVertical) return;
         controlViewOpacity.value = withTiming(0, { duration: 100 });
         if (fullScreen.value) {
           if (translationY > 0 && Math.abs(translationY) < 100) {
