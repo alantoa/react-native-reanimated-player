@@ -14,7 +14,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { Slider } from 'react-native-awesome-slider/src/index';
+import { Slider, SliderThemeType } from 'react-native-awesome-slider/src/index';
 import { clamp } from 'react-native-awesome-slider/src/utils';
 import type { TapGestureHandlerEventPayload } from 'react-native-gesture-handler';
 import {
@@ -78,6 +78,7 @@ export type IProps = VideoProperties & {
   onPanStartEvent?: (ctx: PanGestureHandlerEventPayload) => void;
   onPanEvent?: (ctx: PanGestureHandlerEventPayload) => void;
   onPanEndEvent?: (ctx: PanGestureHandlerEventPayload) => void;
+  theme?: SliderThemeType;
 };
 export type VideoPlayerRef = {
   setPlay: () => void;
@@ -111,6 +112,12 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
       onPanStartEvent,
       onPanEvent,
       onPanEndEvent,
+      theme = {
+        minimumTrackTintColor: palette.Main(1),
+        maximumTrackTintColor: palette.B(0.6),
+        cacheTrackTintColor: palette.G1(1),
+        bubbleBackgroundColor: palette.B(0.8),
+      },
       ...rest
     },
     ref,
@@ -916,8 +923,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
                               fullScreenSliderStyle,
                             ]}>
                             <Slider
-                              minimumTrackTintColor={palette.Main(1)}
-                              maximumTrackTintColor={palette.B(0.3)}
+                              theme={theme}
                               progress={progress}
                               onSlidingComplete={onSlidingComplete}
                               onSlidingStart={onSlidingStart}
@@ -995,9 +1001,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
         />
         <Animated.View style={[styles.slider, bottomSliderStyle]}>
           <Slider
-            minimumTrackTintColor={palette.Main(1)}
-            maximumTrackTintColor={palette.B(0.6)}
-            cacheTrackTintColor={palette.G1(1)}
+            theme={theme}
             progress={progress}
             onSlidingComplete={onSlidingComplete}
             onSlidingStart={onSlidingStart}
@@ -1007,7 +1011,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
             bubble={(value: number) => {
               return secondToTime(value);
             }}
-            bubbleBackgroundColor={palette.B(0.8)}
             disableTapEvent
             onTap={onTapSlider}
             thumbScaleValue={controlViewOpacity}

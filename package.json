@@ -70,7 +70,7 @@
     "lottie-react-native": "^5.0.1",
     "metro-react-native-babel-preset": "^0.66.2",
     "react-native": "0.66.4",
-    "react-native-awesome-slider": "^0.1.14",
+    "react-native-awesome-slider": "^1.4.0",
     "react-native-builder-bob": "^0.18.2",
     "react-native-gesture-handler": "1.10.3",
     "react-native-orientation-locker": "*",
