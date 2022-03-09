@@ -752,44 +752,53 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
                             styles.topControls,
                             topControlStyle,
                           ]}>
-                          <TapControler onPress={onBackTapHandler}>
-                            <Image
-                              source={require('./assets/right_16.png')}
-                              style={styles.back}
-                            />
-                          </TapControler>
-
+                          <View style={styles.back}>
+                            {Boolean(onTapBack) && (
+                              <TapControler onPress={onBackTapHandler}>
+                                <Image
+                                  source={require('./assets/right_16.png')}
+                                  style={styles.back}
+                                />
+                              </TapControler>
+                            )}
+                          </View>
                           <View style={controlStyle.line}>
-                            <Animated.View
-                              style={[
-                                controlStyle.autoPlayText,
-                                autoPlayTextStyle,
-                              ]}>
-                              <Text
-                                tx={
-                                  allowAutoPlayVideo
-                                    ? `Autoplay is on`
-                                    : 'Autoplay is off'
-                                }
-                                t4
-                                color={'#fff'}
-                              />
-                            </Animated.View>
+                            {Boolean(onToggleAutoPlay) && (
+                              <Animated.View
+                                style={[
+                                  controlStyle.autoPlayText,
+                                  autoPlayTextStyle,
+                                ]}>
+                                <Text
+                                  tx={
+                                    allowAutoPlayVideo
+                                      ? `Autoplay is on`
+                                      : 'Autoplay is off'
+                                  }
+                                  t4
+                                  color={'#fff'}
+                                />
+                              </Animated.View>
+                            )}
 
-                            <TapControler
-                              onPress={toggleAutoPlay}
-                              style={controlStyle.autoPlay}>
-                              <AnimatedLottieView
-                                animatedProps={autoPlayAnimatedProps}
-                                source={require('./assets/lottie-auto-play.json')}
-                              />
-                            </TapControler>
-                            <TapControler onPress={onMoreTapHandler}>
-                              <Image
-                                source={require('./assets/more_24.png')}
-                                style={styles.more}
-                              />
-                            </TapControler>
+                            {Boolean(onToggleAutoPlay) && (
+                              <TapControler
+                                onPress={toggleAutoPlay}
+                                style={controlStyle.autoPlay}>
+                                <AnimatedLottieView
+                                  animatedProps={autoPlayAnimatedProps}
+                                  source={require('./assets/lottie-auto-play.json')}
+                                />
+                              </TapControler>
+                            )}
+                            {Boolean(onTapMore) && (
+                              <TapControler onPress={onMoreTapHandler}>
+                                <Image
+                                  source={require('./assets/more_24.png')}
+                                  style={styles.more}
+                                />
+                              </TapControler>
+                            )}
                           </View>
                         </Animated.View>
                         <Animated.View
@@ -801,13 +810,14 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
                           ]}
                           pointerEvents={isFullscreen ? 'auto' : 'none'}>
                           <View style={controlStyle.line}>
-                            <TapControler onPress={onBackTapHandler}>
-                              <Image
-                                source={require('./assets/right_16.png')}
-                                style={styles.back}
-                              />
-                            </TapControler>
-
+                            {Boolean(onTapBack) && (
+                              <TapControler onPress={onBackTapHandler}>
+                                <Image
+                                  source={require('./assets/right_16.png')}
+                                  style={styles.back}
+                                />
+                              </TapControler>
+                            )}
                             <Text
                               tx={headerBarTitle}
                               h5
@@ -817,27 +827,33 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
                             />
                           </View>
                           <View style={controlStyle.line}>
-                            <Animated.View
-                              style={[
-                                controlStyle.autoPlayText,
-                                autoPlayTextStyle,
-                              ]}>
-                              <Text tx="自动播放已开启" t4 color={'#fff'} />
-                            </Animated.View>
-                            <TapControler
-                              onPress={toggleAutoPlay}
-                              style={controlStyle.autoPlay}>
-                              <AnimatedLottieView
-                                animatedProps={autoPlayAnimatedProps}
-                                source={require('./assets/lottie-auto-play.json')}
-                              />
-                            </TapControler>
-                            <TapControler onPress={onMoreTapHandler}>
-                              <Image
-                                source={require('./assets/more_24.png')}
-                                style={styles.more}
-                              />
-                            </TapControler>
+                            {Boolean(onToggleAutoPlay) && (
+                              <Animated.View
+                                style={[
+                                  controlStyle.autoPlayText,
+                                  autoPlayTextStyle,
+                                ]}>
+                                <Text tx="自动播放已开启" t4 color={'#fff'} />
+                              </Animated.View>
+                            )}
+                            {Boolean(onToggleAutoPlay) && (
+                              <TapControler
+                                onPress={toggleAutoPlay}
+                                style={controlStyle.autoPlay}>
+                                <AnimatedLottieView
+                                  animatedProps={autoPlayAnimatedProps}
+                                  source={require('./assets/lottie-auto-play.json')}
+                                />
+                              </TapControler>
+                            )}
+                            {Boolean(onTapMore) && (
+                              <TapControler onPress={onMoreTapHandler}>
+                                <Image
+                                  source={require('./assets/more_24.png')}
+                                  style={styles.more}
+                                />
+                              </TapControler>
+                            )}
                           </View>
                         </Animated.View>
                         <View style={controlStyle.pauseView}>
