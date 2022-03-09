@@ -234,7 +234,7 @@ PODS:
     - glog
   - react-native-orientation-locker (1.4.0):
     - React-Core
-  - react-native-safe-area-context (3.3.2):
+  - react-native-safe-area-context (3.4.1):
     - React-Core
   - react-native-video (5.2.0):
     - React-Core
@@ -308,7 +308,7 @@ PODS:
     - React-perflogger (= 0.67.3)
   - RNGestureHandler (1.10.3):
     - React-Core
-  - RNReanimated (2.3.1):
+  - RNReanimated (2.4.1):
     - DoubleConversion
     - FBLazyVector
     - FBReactNativeSpec
@@ -336,11 +336,11 @@ PODS:
     - React-RCTText
     - ReactCommon/turbomodule/core
     - Yoga
-  - RNScreens (3.10.1):
+  - RNScreens (3.13.1):
     - React-Core
     - React-RCTImage
-  - RNSVG (12.1.1):
-    - React
+  - RNSVG (12.3.0):
+    - React-Core
   - Yoga (1.14.0)
 
 DEPENDENCIES:
@@ -500,7 +500,7 @@ SPEC CHECKSUMS:
   React-jsinspector: 1e1e03345cf6d47779e2061d679d0a87d9ae73d8
   React-logger: 1e10789cb84f99288479ba5f20822ce43ced6ffe
   react-native-orientation-locker: 2da91e5391971dace445495821c899c111dcad7a
-  react-native-safe-area-context: 584dc04881deb49474363f3be89e4ca0e854c057
+  react-native-safe-area-context: 9e40fb181dac02619414ba1294d6c2a807056ab9
   react-native-video: a4c2635d0802f983594b7057e1bce8f442f0ad28
   React-perflogger: 93d3f142d6d9a46e635f09ba0518027215a41098
   React-RCTActionSheet: 87327c3722203cc79cf79d02fb83e7332aeedd18
@@ -515,11 +515,11 @@ SPEC CHECKSUMS:
   React-runtimeexecutor: af1946623656f9c5fd64ca6f36f3863516193446
   ReactCommon: 650e33cde4fb7d36781cd3143f5276da0abb2f96
   RNGestureHandler: a479ebd5ed4221a810967000735517df0d2db211
-  RNReanimated: 1326679461fa5d2399d54c18ca1432ba3e816b9e
-  RNScreens: 522705f2e5c9d27efb17f24aceb2bf8335bc7b8e
-  RNSVG: 551acb6562324b1d52a4e0758f7ca0ec234e278f
+  RNReanimated: 32c91e28f5780937b8efc07ddde1bab8d373fe0b
+  RNScreens: 40a2cb40a02a609938137a1e0acfbf8fc9eebf19
+  RNSVG: 302bfc9905bd8122f08966dc2ce2d07b7b52b9f8
   Yoga: 90dcd029e45d8a7c1ff059e8b3c6612ff409061a
 
-PODFILE CHECKSUM: 93e15788f4d753a4423bdc104d84d07a60dd7611
+PODFILE CHECKSUM: 59da56757415f73be6624226b349e12a245bc081
 
 COCOAPODS: 1.11.2
