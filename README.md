@@ -57,7 +57,7 @@ export const Example = () => {
 ## Features
 
 - 100% written in `TypeScript`.
-- 100% built upon `react-native-reanimated` and `react-native-gusture-handle`.
+- 100% built upon `react-native-reanimated` and `react-native-gusture-handler`.
 - Support gestures switch full screen.
 - Support double tap seek to back or ahead.
 - ...
@@ -78,6 +78,26 @@ The `<VideoPlayer/>` component has the following configuration properties:
     <td>Description</td>
     <td>Required</td>
     <td>Default Value</td>
+  </tr>
+  <tr>
+    <td>theme</td>
+    <td>object</td>
+    <td>The slider theme color</td>
+    <td>❌</td>
+    <td>
+      {
+        // Color to fill the progress in the seekbar
+        minimumTrackTintColor: string,
+        // Color to fill the background in the seekbar
+        maximumTrackTintColor: string,
+        // Color to fill the cache in the seekbar
+        cacheTrackTintColor: string,
+        // Color to fill the bubble backgroundColor
+        disableMinTrackTintColor: string,
+        // Disabled color to fill the progress in the seekbar
+        bubbleBackgroundColor: string
+      }
+    </td>
   </tr>
   <tr>
     <td>showOnStart</td>
