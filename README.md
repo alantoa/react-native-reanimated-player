@@ -19,11 +19,6 @@ First you have to follow installation instructions of:
 - [react-native-orientation-locker](https://github.com/wonday/react-native-orientation-locker/)
 - [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)
 - [react-native-video](https://github.com/react-native-video/react-native-video)
-- 
-If you want to switch full screen, react-native RootView follow your theme color, you also need install:
-
-- [react-native-set-rootview-bgcolor](https://github.com/alantoa/react-native-set-rootview-bgcolor)
-
 
 ```sh
 yarn add react-native-reanimated-player
