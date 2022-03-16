@@ -21,7 +21,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { useSharedValue } from 'react-native-reanimated';
+import Animated, { useSharedValue } from 'react-native-reanimated';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -60,7 +60,7 @@ const Avatar = ({
 );
 
 export const Example = () => {
-  const navigate = useNavigation<NativeStackNavigationProp<RootParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootParamList>>();
   const insets = useSafeAreaInsets();
   const { colors, dark } = useTheme();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -69,20 +69,25 @@ export const Example = () => {
   const indexValue = useSharedValue(0);
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
   const onOpen = () => {
-    videoPlayerRef.current?.setPause();
     bottomSheetModalRef.current?.present();
   };
-  const renderBackdrop = useCallback(
-    props => (
+  const renderBackdrop = useCallback(props => {
+    console.log(props);
+
+    return (
+      // <Animated.View
+      //   style={{
+      //     backgroundColor: 'red',
+      //     height: height,
+      //     width: 400,
+      //   }}></Animated.View>
       <BottomSheetBackdrop
         disappearsOnIndex={-1}
         appearsOnIndex={0}
-        opacity={0.8}
         {...props}
       />
-    ),
-    [],
-  );
+    );
+  }, []);
   const getDividerStyle = (): ViewStyle => {
     return {
       borderBottomWidth: px2dp(0.5),
@@ -90,33 +95,33 @@ export const Example = () => {
     };
   };
   return (
-    <SafeAreaView
-      style={{
-        backgroundColor: palette.B(1),
-        flex: 1,
-        overflow: 'hidden',
-      }}
-      edges={['left', 'right']}>
-      <VideoPlayer
-        source={videoInfo.source}
-        playWhenInactive
-        posterResizeMode="cover"
-        ignoreSilentSwitch="ignore"
-        headerBarTitle={videoInfo.title}
-        onTapBack={() => {
-          Alert.alert('onTapBack');
+    <BottomSheetModalProvider>
+      <SafeAreaView
+        style={{
+          backgroundColor: palette.B(1),
+          flex: 1,
+          overflow: 'hidden',
         }}
-        onTapMore={() => {
-          Alert.alert('onTapMore');
-        }}
-        onToggleAutoPlay={(state: boolean) => {
-          console.log(`onToggleAutoPlay state: ${state}`);
-        }}
-        initPaused={true}
-        videoDefaultHeight={VIDEO_DEFAULT_HEIGHT}
-        ref={videoPlayerRef}
-      />
-      <BottomSheetModalProvider>
+        edges={['left', 'right']}>
+        <VideoPlayer
+          source={videoInfo.source}
+          playWhenInactive
+          posterResizeMode="cover"
+          ignoreSilentSwitch="ignore"
+          headerBarTitle={videoInfo.title}
+          onTapBack={() => {
+            Alert.alert('onTapBack');
+          }}
+          onTapMore={() => {
+            Alert.alert('onTapMore');
+          }}
+          onToggleAutoPlay={(state: boolean) => {
+            console.log(`onToggleAutoPlay state: ${state}`);
+          }}
+          initPaused={true}
+          videoDefaultHeight={VIDEO_DEFAULT_HEIGHT}
+          ref={videoPlayerRef}
+        />
         <View
           style={{
             flex: 1,
@@ -165,7 +170,7 @@ export const Example = () => {
           <BottomSheetModal
             ref={bottomSheetModalRef}
             index={index.current}
-            snapPoints={[fullViewHeight]}
+            snapPoints={[fullViewHeight, height - insets.top]}
             backdropComponent={renderBackdrop}
             animatedIndex={indexValue}
             backgroundStyle={{ backgroundColor: colors.background }}
@@ -214,8 +219,8 @@ export const Example = () => {
             </BottomSheetScrollView>
           </BottomSheetModal>
         </View>
-      </BottomSheetModalProvider>
-    </SafeAreaView>
+      </SafeAreaView>
+    </BottomSheetModalProvider>
   );
 };
 
