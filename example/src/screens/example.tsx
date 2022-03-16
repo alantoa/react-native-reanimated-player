@@ -21,7 +21,11 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import Animated, { useSharedValue } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -29,7 +33,8 @@ import {
 import VideoPlayer, { VideoPlayerRef } from '../../../src';
 import type { RootParamList } from '../../App';
 import { Text, ThemeView } from '../components';
-import Chevrondown from '../components/svg-icon/Chevrondown';
+import { Icon } from '../components/icon';
+import IconFont from '../components/iconfont';
 import { palette } from '../theme/palette';
 const px2dp = (px: number) => PixelRatio.roundToNearestPixel(px);
 export const { width, height, scale, fontScale } = Dimensions.get('window');
@@ -63,24 +68,72 @@ export const Example = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootParamList>>();
   const insets = useSafeAreaInsets();
   const { colors, dark } = useTheme();
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const fullViewHeight = height - VIDEO_DEFAULT_HEIGHT - insets.top;
-  const index = useRef(0);
+  const descModalRef = useRef<BottomSheetModal>(null);
+  const optionsModalRef = useRef<BottomSheetModal>(null);
+  const fullViewHeight = height - VIDEO_DEFAULT_HEIGHT - insets.top - 2;
+  const indexDesc = useRef(0);
+  const indexOptions = useRef(0);
+
+  const isOpened = useRef(false);
+
   const indexValue = useSharedValue(0);
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
   const onOpen = () => {
-    bottomSheetModalRef.current?.present();
+    isOpened.current = true;
+    descModalRef.current?.present();
   };
   const renderBackdrop = useCallback(props => {
-    console.log(props);
-
+    const getHeaderBackdropStyle = useAnimatedStyle(() => {
+      return {
+        opacity: withTiming(indexValue.value, { duration: 100 }),
+      };
+    });
+    const getBodyBackdropStyle = useAnimatedStyle(() => {
+      return {
+        opacity: withTiming(1 + indexValue.value, { duration: 100 }),
+      };
+    });
     return (
-      // <Animated.View
-      //   style={{
-      //     backgroundColor: 'red',
-      //     height: height,
-      //     width: 400,
-      //   }}></Animated.View>
+      <Animated.View
+        style={[
+          {
+            height,
+            width,
+          },
+          props.style,
+        ]}
+        pointerEvents="none">
+        <Animated.View
+          style={[
+            {
+              height: VIDEO_DEFAULT_HEIGHT + insets.top,
+              width,
+              backgroundColor: palette.B(1),
+              top: 0,
+              position: 'absolute',
+            },
+            getHeaderBackdropStyle,
+          ]}
+          pointerEvents="none"
+        />
+        <Animated.View
+          style={[
+            {
+              height: fullViewHeight,
+              width,
+              backgroundColor: palette.B(1),
+              bottom: 0,
+              position: 'absolute',
+            },
+            getBodyBackdropStyle,
+          ]}
+          pointerEvents="none"
+        />
+      </Animated.View>
+    );
+  }, []);
+  const renderOptionsBackdrop = useCallback(props => {
+    return (
       <BottomSheetBackdrop
         disappearsOnIndex={-1}
         appearsOnIndex={0}
@@ -94,6 +147,39 @@ export const Example = () => {
       borderColor: colors.border,
     };
   };
+  const onSheetChange = (index: number) => {
+    if (!isOpened.current) return;
+    switch (index) {
+      case 1:
+        videoPlayerRef.current?.setPause();
+        break;
+      case 0:
+        videoPlayerRef.current?.setPlay();
+        break;
+      default:
+        break;
+    }
+  };
+  const handleComponent = () => (
+    <ThemeView style={styles.modalHeader}>
+      <View style={styles.header}>
+        <View
+          style={[
+            styles.block,
+            { backgroundColor: dark ? palette.G5(1) : palette.G2(1) },
+          ]}
+        />
+      </View>
+      <View style={[styles.handleTitle, getDividerStyle()]}>
+        <Text tx="Description" h3 color={dark ? palette.W(1) : palette.G9(1)} />
+        <Text
+          tx={videoInfo.createTime}
+          t3
+          color={dark ? palette.W(1) : palette.G9(1)}
+        />
+      </View>
+    </ThemeView>
+  );
   return (
     <BottomSheetModalProvider>
       <SafeAreaView
@@ -113,7 +199,7 @@ export const Example = () => {
             Alert.alert('onTapBack');
           }}
           onTapMore={() => {
-            Alert.alert('onTapMore');
+            optionsModalRef.current?.present();
           }}
           onToggleAutoPlay={(state: boolean) => {
             console.log(`onToggleAutoPlay state: ${state}`);
@@ -136,7 +222,11 @@ export const Example = () => {
               onPress={onOpen}>
               <View style={[styles.titleContainer, getDividerStyle()]}>
                 <Text h4 tx={videoInfo?.title} style={styles.title} />
-                <Chevrondown size={16} color={colors.text} />
+                <Icon
+                  name="a-ic_chevrondown_16"
+                  size={16}
+                  color={colors.text}
+                />
               </View>
             </TouchableHighlight>
             <View style={[flexRow, styles.authors, getDividerStyle()]}>
@@ -168,39 +258,17 @@ export const Example = () => {
             </View>
           </ScrollView>
           <BottomSheetModal
-            ref={bottomSheetModalRef}
-            index={index.current}
+            ref={descModalRef}
+            index={indexDesc.current}
             snapPoints={[fullViewHeight, height - insets.top]}
             backdropComponent={renderBackdrop}
             animatedIndex={indexValue}
             backgroundStyle={{ backgroundColor: colors.background }}
-            handleStyle={{
-              backgroundColor: 'red',
+            onChange={onSheetChange}
+            onDismiss={() => {
+              isOpened.current = false;
             }}
-            handleComponent={() => (
-              <ThemeView style={styles.modalHeader}>
-                <View style={styles.header}>
-                  <View
-                    style={[
-                      styles.block,
-                      { backgroundColor: dark ? palette.G5(1) : palette.G2(1) },
-                    ]}
-                  />
-                </View>
-                <View style={[styles.handleTitle, getDividerStyle()]}>
-                  <Text
-                    tx="Description"
-                    h3
-                    color={dark ? palette.W(1) : palette.G9(1)}
-                  />
-                  <Text
-                    tx={videoInfo.createTime}
-                    t3
-                    color={dark ? palette.W(1) : palette.G9(1)}
-                  />
-                </View>
-              </ThemeView>
-            )}>
+            handleComponent={handleComponent}>
             <BottomSheetScrollView
               contentContainerStyle={[
                 styles.desc,
@@ -216,6 +284,32 @@ export const Example = () => {
                 <Text tx={videoInfo.author} t3 tBold />
               </View>
               <Text tx={videoInfo.desc} h4 style={{ marginVertical: 12 }} />
+            </BottomSheetScrollView>
+          </BottomSheetModal>
+
+          <BottomSheetModal
+            ref={optionsModalRef}
+            index={indexOptions.current}
+            snapPoints={[400]}
+            backdropComponent={renderOptionsBackdrop}
+            backgroundStyle={{ backgroundColor: colors.background }}
+            footerComponent={() => (
+              <View
+                style={[
+                  styles.item,
+                  {
+                    paddingBottom: insets.bottom + 44,
+                    backgroundColor: colors.background,
+                  },
+                ]}>
+                <Text tx={'Cancel'} t3 tBold />
+              </View>
+            )}
+            handleComponent={() => null}>
+            <BottomSheetScrollView>
+              <View style={styles.item}>
+                <Text tx={'Report'} t3 tBold />
+              </View>
             </BottomSheetScrollView>
           </BottomSheetModal>
         </View>
@@ -299,5 +393,9 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     height: 3,
     width: 40,
+  },
+  item: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
   },
 });

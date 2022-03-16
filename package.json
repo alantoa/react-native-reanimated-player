@@ -90,8 +90,7 @@
     "react-native-gesture-handler": ">=2.0.0",
     "react-native-orientation-locker": "*",
     "react-native-reanimated": ">=2.0.0",
-    "react-native-safe-area-context": "*",
-    "react-native-video": "*"
+    "react-native-safe-area-context": "*"
   },
   "jest": {
     "preset": "react-native",

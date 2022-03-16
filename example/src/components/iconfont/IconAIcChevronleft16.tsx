@@ -11,21 +11,27 @@ interface Props extends GProps, ViewProps {
   color?: string | string[];
 }
 
-let Chevrondown: FunctionComponent<Props> = ({ size, color, ...rest }) => {
+let IconAIcChevronleft16: FunctionComponent<Props> = ({
+  size,
+  color,
+  ...rest
+}) => {
   return (
     <Svg viewBox="0 0 1024 1024" width={size} height={size} {...rest}>
       <Path
-        d="M865.92 350.08a48 48 0 0 0-67.84 0L512 636.16l-286.08-286.08a48 48 0 1 0-67.84 67.84l320 320a48 48 0 0 0 67.84 0l320-320a48 48 0 0 0 0-67.84z"
+        d="M673.92 865.92a48 48 0 0 0 0-67.84L387.84 512l286.08-286.08a48 48 0 1 0-67.84-67.84l-320 320a48 48 0 0 0 0 67.84l320 320a48 48 0 0 0 67.84 0z"
         fill={getIconColor(color, 0, '#333333')}
       />
     </Svg>
   );
 };
 
-Chevrondown.defaultProps = {
+IconAIcChevronleft16.defaultProps = {
   size: 18,
 };
 
-Chevrondown = React.memo ? React.memo(Chevrondown) : Chevrondown;
+IconAIcChevronleft16 = React.memo
+  ? React.memo(IconAIcChevronleft16)
+  : IconAIcChevronleft16;
 
-export default Chevrondown;
+export default IconAIcChevronleft16;
