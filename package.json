@@ -49,6 +49,7 @@
   },
   "homepage": "https://github.com/MonsterAnan/react-native-video-player",
   "dependencies": {
+    "@gorhom/portal": "^1.0.12",
     "lodash.padstart": "^4.6.1"
   },
   "devDependencies": {

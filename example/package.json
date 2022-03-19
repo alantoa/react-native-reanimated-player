@@ -7,10 +7,13 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "icon": "npx iconfont-rn",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix"
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^4",
+    "@gorhom/portal": "^1.0.12",
     "@react-navigation/native": "^6.0.6",
     "@react-navigation/native-stack": "^6.2.5",
     "babel-plugin-module-resolver": "^4.1.0",
@@ -19,6 +22,7 @@
     "react-native": "^0.67.3",
     "react-native-awesome-slider": "^2.0.1",
     "react-native-gesture-handler": "^2.3.2",
+    "react-native-inkwell": "^0.4.5",
     "react-native-orientation-locker": "^1.4.0",
     "react-native-reanimated": "^2.3.1",
     "react-native-redash": "^16.2.3",

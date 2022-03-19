@@ -13,13 +13,19 @@ import {
   StyleSheet,
   useWindowDimensions,
   View,
+  ViewStyle,
 } from 'react-native';
-import { Slider, SliderThemeType } from 'react-native-awesome-slider/src/index';
+import {
+  Slider,
+  SliderThemeType,
+  AwesomeSliderProps,
+} from 'react-native-awesome-slider/src/index';
 import { clamp } from 'react-native-awesome-slider/src/utils';
 import { Gesture } from 'react-native-gesture-handler';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Orientation, { OrientationType } from 'react-native-orientation-locker';
 import Animated, {
+  AnimatedStyleProp,
   cancelAnimation,
   runOnJS,
   useAnimatedProps,
@@ -39,7 +45,7 @@ import { Text } from './components';
 import { Ripple } from './components/ripple';
 import { TapControler } from './tap-controler';
 import { palette } from './theme/palette';
-import { bin, isIos, useRefs, useVector } from './utils';
+import { bin, isIos, useRefs } from './utils';
 import { VideoLoader } from './video-loading';
 import { formatTime, formatTimeToMins, secondToTime } from './video-utils';
 
@@ -54,7 +60,7 @@ const controlAnimteConfig = {
 
 const AnimatedLottieView = Animated.createAnimatedComponent(LottieView);
 
-export type IProps = VideoProperties & {
+export type VideoProps = VideoProperties & {
   showOnStart?: boolean;
   toggleResizeModeOnFullscreen?: boolean;
   onEnterFullscreen?: () => void;
@@ -65,19 +71,33 @@ export type IProps = VideoProperties & {
   headerBarTitle?: string;
   onTapBack?: () => void;
   navigation?: any;
-  initPaused?: boolean;
   autoPlay?: boolean;
   onToggleAutoPlay?: (state: boolean) => void;
   onTapMore?: () => void;
   doubleTapInterval?: number;
   theme?: SliderThemeType;
+  paused: boolean;
+  onPausedChange: (paused: boolean) => void;
+  onTapPause?: (paused: boolean) => void;
+  sliderProps?: Pick<
+    AwesomeSliderProps,
+    | 'renderBubble'
+    | 'bubble'
+    | 'bubbleMaxWidth'
+    | 'bubbleWidth'
+    | 'bubbleTranslateY'
+  >;
+  panTranslationY?: Animated.SharedValue<number>;
+  panVelocityY?: Animated.SharedValue<number>;
+  videoHeight: Animated.SharedValue<number>;
+  customContainerAnimationStyle?: AnimatedStyleProp<ViewStyle>;
 };
 export type VideoPlayerRef = {
   setPlay: () => void;
   setPause: () => void;
 };
 
-const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
+const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
   (
     {
       resizeMode = 'contain',
@@ -92,11 +112,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
       onExitFullscreen,
       controlTimeout = 2000,
       videoDefaultHeight = VIDEO_DEFAULT_HEIGHT,
-      videoDefaultWidth = width,
       headerBarTitle = '',
       onTapBack,
       navigation,
-      initPaused = false,
       autoPlay = false,
       onToggleAutoPlay,
       onTapMore,
@@ -107,6 +125,14 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
         cacheTrackTintColor: palette.G1(1),
         bubbleBackgroundColor: palette.B(0.8),
       },
+      paused,
+      onPausedChange,
+      onTapPause,
+      sliderProps,
+      panTranslationY,
+      panVelocityY,
+      videoHeight,
+      customContainerAnimationStyle,
       ...rest
     },
     ref,
@@ -114,6 +140,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
     /**
      * hooks
      */
+
     const insets = useSafeAreaInsets();
     const insetsRef = useRef(insets);
     const dimensions = useWindowDimensions();
@@ -126,7 +153,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
     /**
      * state
      */
-    const [paused, setPaused] = useState(initPaused);
     const [state, setState] = useState({
       // Video
       resizeMode: resizeMode,
@@ -145,9 +171,11 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
 
     useImperativeHandle(ref, () => ({
       setPlay: () => {
+        checkTapTakesEffect();
         play();
       },
       setPause: () => {
+        checkTapTakesEffect();
         pause();
       },
     }));
@@ -173,10 +201,12 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
     const doubleLeftOpacity = useSharedValue(0);
     const doubleRightOpacity = useSharedValue(0);
     const playAnimated = useSharedValue(0);
-    const videoContainerInfo = useVector(videoDefaultWidth, videoDefaultHeight);
+
     const videoScale = useSharedValue(1);
     const videoTransY = useSharedValue(0);
     const panIsVertical = useSharedValue(false);
+    const panIsToTop = useSharedValue(false);
+
     const doubleTapIsAlive = useSharedValue(false);
 
     const max = useSharedValue(100);
@@ -184,12 +214,13 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
     const isScrubbing = useSharedValue(false);
     const isSeeking = useRef(false);
     const progress = useSharedValue(0);
-
-    const containerStyle = useAnimatedStyle(() => {
-      return {
-        height: videoContainerInfo.y.value,
-      };
+    const defaultContainerStyle = useAnimatedStyle(() => {
+      return { height: videoHeight.value };
     }, []);
+    const containerStyle = customContainerAnimationStyle
+      ? customContainerAnimationStyle
+      : defaultContainerStyle;
+
     const videoStyle = useAnimatedStyle(() => {
       return {
         transform: [
@@ -231,7 +262,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
     const bottomSliderStyle = useAnimatedStyle(() => {
       return {
         opacity: withTiming(bin(!fullScreen.value)),
-        top: videoContainerInfo.y.value + insets.top,
+        top: videoHeight.value + insets.top,
       };
     });
     const fullScreenSliderStyle = useAnimatedStyle(() => {
@@ -291,7 +322,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
       mounted.current = true;
       Orientation.lockToPortrait();
       StatusBar.setBarStyle('light-content');
-      initPaused ? pause() : play();
+      paused ? pause() : play();
       const unBeforeRemove = navigation?.addListener(
         'beforeRemove',
         (e: any) => {
@@ -310,6 +341,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
         Orientation.lockToPortrait();
         unBeforeRemove && unBeforeRemove();
       };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     /**
@@ -374,8 +406,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
       backdropOpacity.value = 1;
       Orientation.lockToLandscape();
       fullScreen.value = true;
-      videoContainerInfo.x.value = height;
-      videoContainerInfo.y.value = width;
+      videoHeight.value = width;
       onEnterFullscreen?.();
     };
 
@@ -383,8 +414,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
       StatusBar.setHidden(false, 'fade');
       Orientation.lockToPortrait();
       fullScreen.value = false;
-      videoContainerInfo.x.value = videoDefaultWidth;
-      videoContainerInfo.y.value = videoDefaultHeight;
+      videoHeight.value = videoDefaultHeight;
       onExitFullscreen?.();
       backdropOpacity.value = 0;
     };
@@ -412,7 +442,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
     const toggleFullScreen = () => {
       'worklet';
       const status = checkTapTakesEffect();
-      if (!status) return;
+      if (!status) {
+        return;
+      }
       runOnJS(toggleFullScreenOnJS)();
     };
 
@@ -420,12 +452,13 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
      * on pan event
      */
     const onPanGesture = Gesture.Pan()
-      .onStart(({ velocityY, velocityX }) => {
+      .onStart(({ velocityY, velocityX, translationY }) => {
         panIsVertical.value = Math.abs(velocityY) > Math.abs(velocityX);
+        panIsToTop.value = translationY < 0;
       })
-      .onUpdate(({ translationY }) => {
-        if (!panIsVertical.value) return;
+      .onUpdate(({ translationY, velocityY }) => {
         controlViewOpacity.value = withTiming(0, { duration: 100 });
+
         if (fullScreen.value) {
           if (translationY > 0 && Math.abs(translationY) < 100) {
             videoScale.value = clamp(
@@ -436,20 +469,32 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
             videoTransY.value = translationY;
           }
         } else {
+          if (panTranslationY && !panIsToTop.value) {
+            panTranslationY.value = translationY;
+          }
+          if (panVelocityY && !panIsToTop.value) {
+            panVelocityY.value = velocityY;
+          }
+          if (!panIsToTop.value) {
+            return;
+          }
           if (translationY < 0 && Math.abs(translationY) < 40) {
             videoScale.value = Math.abs(translationY) * 0.012 + 1;
           }
         }
       })
       .onEnd(({ translationY }) => {
-        console.log(translationY);
-
-        if (!panIsVertical.value) return;
+        if (!panIsVertical.value) {
+          return;
+        }
         if (fullScreen.value) {
           if (translationY >= 100) {
             runOnJS(exitFullScreen)();
           }
         } else {
+          if (!panIsToTop.value) {
+            return;
+          }
           if (-translationY >= 40) {
             runOnJS(enterFullScreen)();
           }
@@ -471,13 +516,16 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
 
     const doubleTapHandle = Gesture.Tap()
       .numberOfTaps(2)
+      .maxDuration(doubleTapInterval)
       .onStart(({ x }) => {
         doubleTapIsAlive.value =
           x < leftDoubleTapBoundary && x > rightDoubleTapBoundary;
       })
       .onEnd(({ x, y, numberOfPointers }, success) => {
         if (success) {
-          if (numberOfPointers !== 1) return;
+          if (numberOfPointers !== 1) {
+            return;
+          }
           if (!doubleTapIsAlive.value) {
             resetControlTimeout();
             if (controlViewOpacity.value === 0) {
@@ -514,12 +562,15 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
         onReplyVideo();
         isLoadEnd.value = false;
       }
+      onTapPause?.(!paused);
       paused ? play() : pause();
     };
     const onPauseTapHandler = () => {
       'worklet';
       const status = checkTapTakesEffect();
-      if (!status) return;
+      if (!status) {
+        return;
+      }
       runOnJS(togglePlayOnJS)();
     };
     /**
@@ -540,7 +591,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
     const onBackTapHandler = () => {
       'worklet';
       const status = checkTapTakesEffect();
-      if (!status) return;
+      if (!status) {
+        return;
+      }
       runOnJS(onBackTapHandlerOnJS)();
     };
 
@@ -562,7 +615,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
     const toggleTimer = () => {
       'worklet';
       const status = checkTapTakesEffect();
-      if (!status) return;
+      if (!status) {
+        return;
+      }
       runOnJS(toggleTimerOnJS)();
     };
 
@@ -631,12 +686,12 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
      *
      * @param {object} data The video meta data
      */
-    const onProgress = ({ currentTime }: OnProgressData) => {
+    const onProgress = ({ currentTime: cTime }: OnProgressData) => {
       if (!isScrubbing.value) {
         if (!isSeeking.current) {
-          progress.value = currentTime;
+          progress.value = cTime;
         }
-        setCurrentTime(currentTime);
+        setCurrentTime(cTime);
       }
     };
     /**
@@ -652,7 +707,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
      * play the video
      */
     const play = () => {
-      setPaused(false);
+      onPausedChange(false);
       playAnimated.value = 0;
     };
 
@@ -660,7 +715,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
      * pause the video
      */
     const pause = () => {
-      setPaused(true);
+      onPausedChange(true);
       playAnimated.value = 0.5;
     };
     /**
@@ -674,7 +729,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
     const toggleAutoPlay = () => {
       'worklet';
       const status = checkTapTakesEffect();
-      if (!status) return;
+      if (!status) {
+        return;
+      }
 
       autoPlayAnimation.value = autoPlayAnimation.value === 0 ? 0.5 : 0;
       autoPlayTextAnimation.value = withTiming(1);
@@ -685,7 +742,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
     const onMoreTapHandler = () => {
       'worklet';
       const status = checkTapTakesEffect();
-      if (!status) return;
+      if (!status) {
+        return;
+      }
       if (onTapMore) {
         runOnJS(onTapMore)();
       }
@@ -763,7 +822,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
                           <Text
                             tx={
                               allowAutoPlayVideo
-                                ? `Autoplay is on`
+                                ? 'Autoplay is on'
                                 : 'Autoplay is off'
                             }
                             t4
@@ -920,6 +979,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
                         thumbScaleValue={controlViewOpacity}
                         thumbWidth={8}
                         sliderHeight={2}
+                        {...sliderProps}
                       />
                     </Animated.View>
                   </Animated.View>
@@ -997,7 +1057,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, IProps>(
             thumbScaleValue={controlViewOpacity}
             thumbWidth={12}
             sliderHeight={2}
-            style={{ left: 0, top: 0, zIndex: 100 }}
+            {...sliderProps}
           />
         </Animated.View>
       </>
@@ -1032,7 +1092,7 @@ const styles = StyleSheet.create({
   },
   slider: {
     width: width,
-    zIndex: 100,
+    zIndex: 1000,
     position: 'absolute',
     left: 0,
     right: 0,
@@ -1057,7 +1117,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...StyleSheet.absoluteFillObject,
   },
-  view: {},
   viewContainer: {
     width: '100%',
   },

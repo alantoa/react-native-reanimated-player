@@ -4,17 +4,15 @@ import {
   BottomSheetModalProvider,
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
-import { useNavigation, useTheme } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTheme } from '@react-navigation/native';
 import React, { useCallback, useRef } from 'react';
+import { useState } from 'react';
 import {
-  Alert,
   Dimensions,
   Image,
   ImageStyle,
   PixelRatio,
   ScrollView,
-  StatusBar,
   StyleProp,
   StyleSheet,
   TouchableHighlight,
@@ -24,18 +22,19 @@ import {
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
 } from 'react-native-reanimated';
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import VideoPlayer, { VideoPlayerRef } from '../../../src';
-import type { RootParamList } from '../../App';
+import { mb, mr, mt } from '../utils/ui-tools';
+import VideoPlayer, { VideoPlayerRef, VideoProps } from '../../../src';
 import { Text, ThemeView } from '../components';
 import { Icon } from '../components/icon';
-import IconFont from '../components/iconfont';
+import type { IconNames } from '../components/iconfont';
 import { palette } from '../theme/palette';
+import InkWell from 'react-native-inkwell';
+import { clamp } from 'react-native-awesome-slider/src/utils';
 const px2dp = (px: number) => PixelRatio.roundToNearestPixel(px);
 export const { width, height, scale, fontScale } = Dimensions.get('window');
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
@@ -44,7 +43,7 @@ const videoInfo = {
   author: 'Billie Eilish',
   avatar: require('../assets/avatar.jpeg'),
   source: require('../assets/video-demo.mp4'),
-  desc: `A react native video player components demo, this is desc`,
+  desc: 'A react native video player components demo, this is desc',
   createTime: '2 years ago',
 };
 const flexRow: ViewStyle = {
@@ -63,9 +62,23 @@ const Avatar = ({
     style={[{ width: size, height: size, borderRadius: size }, style]}
   />
 );
+const options: { icon: IconNames; title: string }[] = [
+  {
+    icon: 'feedback',
+    title: 'Help & feedback',
+  },
+  {
+    icon: 'flagoutline',
+    title: 'Report',
+  },
+  {
+    icon: 'setting',
+    title: 'Setting',
+  },
+];
 
 export const Example = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootParamList>>();
+  const [paused, setPaused] = useState(true);
   const insets = useSafeAreaInsets();
   const { colors, dark } = useTheme();
   const descModalRef = useRef<BottomSheetModal>(null);
@@ -73,24 +86,51 @@ export const Example = () => {
   const fullViewHeight = height - VIDEO_DEFAULT_HEIGHT - insets.top - 2;
   const indexDesc = useRef(0);
   const indexOptions = useRef(0);
-
   const isOpened = useRef(false);
-
+  const isTapPaused = useRef(paused);
+  const sheetPrevIndex = useRef(-1);
   const indexValue = useSharedValue(0);
+  const panTranslationY = useSharedValue(0);
+  const panVelocityY = useSharedValue(0);
+
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
+  const videoHeight = useSharedValue(VIDEO_DEFAULT_HEIGHT);
+  const pageStyle = useAnimatedStyle(() => {
+    // console.log(panTranslationY.value, panVelocityY.value);
+
+    return {
+      transform: [
+        {
+          translateY: clamp(panTranslationY.value, 0, height),
+        },
+      ],
+    };
+  });
+
+  const customContainerAnimationStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: clamp(panTranslationY.value, 0, height),
+        },
+      ],
+      height: videoHeight.value,
+    };
+  }, []);
   const onOpen = () => {
-    isOpened.current = true;
     descModalRef.current?.present();
   };
   const renderBackdrop = useCallback(props => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const getHeaderBackdropStyle = useAnimatedStyle(() => {
       return {
-        opacity: withTiming(indexValue.value, { duration: 100 }),
+        opacity: indexValue.value,
       };
     });
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const getBodyBackdropStyle = useAnimatedStyle(() => {
       return {
-        opacity: withTiming(1 + indexValue.value, { duration: 100 }),
+        opacity: 1 + indexValue.value,
       };
     });
     return (
@@ -105,6 +145,7 @@ export const Example = () => {
         pointerEvents="none">
         <Animated.View
           style={[
+            // eslint-disable-next-line react-native/no-inline-styles
             {
               height: VIDEO_DEFAULT_HEIGHT + insets.top,
               width,
@@ -118,6 +159,7 @@ export const Example = () => {
         />
         <Animated.View
           style={[
+            // eslint-disable-next-line react-native/no-inline-styles
             {
               height: fullViewHeight,
               width,
@@ -131,6 +173,7 @@ export const Example = () => {
         />
       </Animated.View>
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const renderOptionsBackdrop = useCallback(props => {
     return (
@@ -148,17 +191,22 @@ export const Example = () => {
     };
   };
   const onSheetChange = (index: number) => {
-    if (!isOpened.current) return;
+    if (isOpened.current && !isTapPaused.current) {
+      videoPlayerRef.current?.setPlay();
+    }
     switch (index) {
       case 1:
         videoPlayerRef.current?.setPause();
         break;
       case 0:
-        videoPlayerRef.current?.setPlay();
+        isOpened.current = true;
         break;
       default:
+        isOpened.current = false;
+
         break;
     }
+    sheetPrevIndex.current = index;
   };
   const handleComponent = () => (
     <ThemeView style={styles.modalHeader}>
@@ -180,145 +228,199 @@ export const Example = () => {
       </View>
     </ThemeView>
   );
+  const renderBubble = useCallback(
+    () => (
+      <Image
+        source={require('../assets/snapshot.png')}
+        style={styles.snapshot}
+      />
+    ),
+    [],
+  );
   return (
     <BottomSheetModalProvider>
-      <SafeAreaView
-        style={{
-          backgroundColor: palette.B(1),
-          flex: 1,
-          overflow: 'hidden',
-        }}
-        edges={['left', 'right']}>
-        <VideoPlayer
-          source={videoInfo.source}
-          playWhenInactive
-          posterResizeMode="cover"
-          ignoreSilentSwitch="ignore"
-          headerBarTitle={videoInfo.title}
-          onTapBack={() => {
-            Alert.alert('onTapBack');
-          }}
-          onTapMore={() => {
-            optionsModalRef.current?.present();
-          }}
-          onToggleAutoPlay={(state: boolean) => {
-            console.log(`onToggleAutoPlay state: ${state}`);
-          }}
-          initPaused={true}
-          videoDefaultHeight={VIDEO_DEFAULT_HEIGHT}
-          ref={videoPlayerRef}
-        />
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: colors.background,
-          }}>
-          <ScrollView
-            contentContainerStyle={{
-              flex: 1,
-            }}>
-            <TouchableHighlight
-              underlayColor={dark ? palette.G5(0.6) : palette.G2(0.6)}
-              onPress={onOpen}>
-              <View style={[styles.titleContainer, getDividerStyle()]}>
-                <Text h4 tx={videoInfo?.title} style={styles.title} />
-                <Icon
-                  name="a-ic_chevrondown_16"
-                  size={16}
-                  color={colors.text}
-                />
-              </View>
-            </TouchableHighlight>
-            <View style={[flexRow, styles.authors, getDividerStyle()]}>
-              <View style={flexRow}>
-                <Avatar size={40} style={{ marginRight: 12 }} />
+      <SafeAreaView style={styles.view} edges={['left', 'right']}>
+        <Animated.View style={[styles.pageView, pageStyle]}>
+          <VideoPlayer
+            source={videoInfo.source}
+            playWhenInactive
+            posterResizeMode="cover"
+            ignoreSilentSwitch="ignore"
+            headerBarTitle={videoInfo.title}
+            onTapBack={() => {
+              // Alert.alert('onTapBack');
+            }}
+            paused={paused}
+            onPausedChange={state => {
+              setPaused(state);
+            }}
+            onTapPause={state => {
+              isTapPaused.current = state;
+            }}
+            onTapMore={() => {
+              optionsModalRef.current?.present();
+            }}
+            onToggleAutoPlay={(state: boolean) => {
+              console.log(`onToggleAutoPlay state: ${state}`);
+            }}
+            videoDefaultHeight={VIDEO_DEFAULT_HEIGHT}
+            ref={videoPlayerRef}
+            sliderProps={{
+              renderBubble: renderBubble,
+              bubbleTranslateY: -60,
+              bubbleWidth: 120,
+              bubbleMaxWidth: 120,
+            }}
+            panTranslationY={panTranslationY}
+            panVelocityY={panVelocityY}
+            videoHeight={videoHeight}
+            customContainerAnimationStyle={customContainerAnimationStyle}
+          />
+          <View
+            style={[
+              styles.flex1,
+              {
+                backgroundColor: colors.background,
+              },
+            ]}>
+            <ScrollView contentContainerStyle={styles.flex1}>
+              <TouchableHighlight
+                underlayColor={dark ? palette.G5(0.6) : palette.G2(0.6)}
+                onPress={onOpen}>
+                <View style={[styles.titleContainer, getDividerStyle()]}>
+                  <Text h4 tx={videoInfo?.title} style={styles.title} />
+                  <Icon
+                    name="a-ic_chevrondown_16"
+                    size={16}
+                    color={colors.text}
+                  />
+                </View>
+              </TouchableHighlight>
+              <View style={[flexRow, styles.authors, getDividerStyle()]}>
+                <View style={flexRow}>
+                  <Avatar size={40} style={mr(3)} />
+                  <View>
+                    <Text tx={videoInfo.author} t1 />
+                    <Text>
+                      <Text
+                        tx={'44.7M '}
+                        t4
+                        color={dark ? palette.G3(1) : palette.G5(1)}
+                      />
+                      <Text
+                        tx={'subscribers'}
+                        t5
+                        color={dark ? palette.G3(1) : palette.G5(1)}
+                      />
+                    </Text>
+                  </View>
+                </View>
                 <View>
-                  <Text tx={videoInfo.author} t1 />
-                  <Text>
-                    <Text
-                      tx={`44.7M `}
-                      t4
-                      color={dark ? palette.G3(1) : palette.G5(1)}
-                    />
-                    <Text
-                      tx={`subscribers`}
-                      t5
-                      color={dark ? palette.G3(1) : palette.G5(1)}
-                    />
-                  </Text>
+                  <Text
+                    tx={'SUBSCRIBED'}
+                    h5
+                    color={dark ? palette.G3(1) : palette.G5(1)}
+                  />
                 </View>
               </View>
-              <View>
-                <Text
-                  tx={`SUBSCRIBED`}
-                  h5
-                  color={dark ? palette.G3(1) : palette.G5(1)}
-                />
-              </View>
-            </View>
-          </ScrollView>
-          <BottomSheetModal
-            ref={descModalRef}
-            index={indexDesc.current}
-            snapPoints={[fullViewHeight, height - insets.top]}
-            backdropComponent={renderBackdrop}
-            animatedIndex={indexValue}
-            backgroundStyle={{ backgroundColor: colors.background }}
-            onChange={onSheetChange}
-            onDismiss={() => {
-              isOpened.current = false;
-            }}
-            handleComponent={handleComponent}>
-            <BottomSheetScrollView
-              contentContainerStyle={[
-                styles.desc,
-                {
-                  paddingBottom: insets.bottom + 44,
-                  backgroundColor: colors.background,
-                },
-              ]}>
-              <Text tx={videoInfo.title} t3 tBold style={{ marginTop: 12 }} />
-
-              <View style={[styles.descInfo, getDividerStyle()]}>
-                <Avatar size={20} style={styles.avatar} />
-                <Text tx={videoInfo.author} t3 tBold />
-              </View>
-              <Text tx={videoInfo.desc} h4 style={{ marginVertical: 12 }} />
-            </BottomSheetScrollView>
-          </BottomSheetModal>
-
-          <BottomSheetModal
-            ref={optionsModalRef}
-            index={indexOptions.current}
-            snapPoints={[400]}
-            backdropComponent={renderOptionsBackdrop}
-            backgroundStyle={{ backgroundColor: colors.background }}
-            footerComponent={() => (
-              <View
-                style={[
-                  styles.item,
+            </ScrollView>
+            <BottomSheetModal
+              ref={descModalRef}
+              index={indexDesc.current}
+              snapPoints={[fullViewHeight, height - insets.top]}
+              backdropComponent={renderBackdrop}
+              animatedIndex={indexValue}
+              backgroundStyle={{ backgroundColor: colors.background }}
+              onChange={onSheetChange}
+              onDismiss={() => {
+                isOpened.current = false;
+              }}
+              handleComponent={handleComponent}>
+              <BottomSheetScrollView
+                contentContainerStyle={[
+                  styles.desc,
                   {
                     paddingBottom: insets.bottom + 44,
                     backgroundColor: colors.background,
                   },
                 ]}>
-                <Text tx={'Cancel'} t3 tBold />
-              </View>
-            )}
-            handleComponent={() => null}>
-            <BottomSheetScrollView>
-              <View style={styles.item}>
-                <Text tx={'Report'} t3 tBold />
-              </View>
-            </BottomSheetScrollView>
-          </BottomSheetModal>
-        </View>
+                <Text tx={videoInfo.title} t3 tBold style={mt(3)} />
+
+                <View style={[styles.descInfo, getDividerStyle()]}>
+                  <Avatar size={20} style={styles.avatar} />
+                  <Text tx={videoInfo.author} t3 tBold />
+                </View>
+                <Text tx={videoInfo.desc} h4 style={[mt(3), mb(3)]} />
+              </BottomSheetScrollView>
+            </BottomSheetModal>
+
+            <BottomSheetModal
+              ref={optionsModalRef}
+              index={indexOptions.current}
+              snapPoints={[210]}
+              backdropComponent={renderOptionsBackdrop}
+              backgroundStyle={[
+                styles.backgroundStyle,
+                { backgroundColor: colors.background },
+              ]}
+              footerComponent={() => (
+                <InkWell
+                  onTap={() => {
+                    optionsModalRef.current?.close();
+                  }}
+                  contentContainerStyle={[styles.inkWell, mt(1)]}
+                  style={[
+                    styles.inkWellView,
+                    {
+                      marginBottom: insets.bottom + 10,
+                      borderTopColor: colors.border,
+                      borderTopWidth: px2dp(0.5),
+                    },
+                  ]}>
+                  <View style={[styles.item]}>
+                    <Icon name="close" size={24} color={colors.text} />
+                    <Text tx={'Cancel'} style={styles.text} t2 />
+                  </View>
+                </InkWell>
+              )}
+              handleComponent={() => null}>
+              <BottomSheetScrollView>
+                {options.map(item => (
+                  <InkWell
+                    onTap={() => {
+                      optionsModalRef.current?.close();
+                    }}
+                    contentContainerStyle={styles.inkWell}
+                    style={styles.inkWellView}
+                    key={item.title}>
+                    <View style={styles.item}>
+                      <Icon name={item.icon} size={24} color={colors.text} />
+                      <Text
+                        tx={item.title}
+                        t2
+                        style={styles.text}
+                        color={colors.text}
+                      />
+                    </View>
+                  </InkWell>
+                ))}
+              </BottomSheetScrollView>
+            </BottomSheetModal>
+          </View>
+        </Animated.View>
       </SafeAreaView>
     </BottomSheetModalProvider>
   );
 };
 
 const styles = StyleSheet.create({
+  flex1: {
+    flex: 1,
+  },
+  backgroundStyle: {
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+  },
   authors: {
     justifyContent: 'space-between',
     marginTop: 12,
@@ -380,9 +482,13 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   view: {
-    overflow: 'hidden',
-    width,
+    backgroundColor: palette.B(1),
+    flex: 1,
   },
+  pageView: {
+    flex: 1,
+  },
+
   header: {
     alignItems: 'center',
     height: 20,
@@ -395,7 +501,25 @@ const styles = StyleSheet.create({
     width: 40,
   },
   item: {
-    paddingVertical: 12,
     paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  text: {
+    marginLeft: 20,
+  },
+  inkWell: {
+    justifyContent: 'center',
+  },
+  inkWellFooter: {
+    width: '100%',
+  },
+  inkWellView: {
+    width: '100%',
+    height: 40,
+  },
+  snapshot: {
+    width: 120,
+    height: 67,
   },
 });

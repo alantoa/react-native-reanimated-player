@@ -2,7 +2,7 @@
 /* eslint-disable */
 
 import React, { FunctionComponent } from 'react';
-import type { ViewProps } from 'react-native';
+import { ViewProps } from 'react-native';
 import { Svg, GProps, Path } from 'react-native-svg';
 import { getIconColor } from './helper';
 
@@ -11,11 +11,7 @@ interface Props extends GProps, ViewProps {
   color?: string | string[];
 }
 
-let IconAIcChevronleft16: FunctionComponent<Props> = ({
-  size,
-  color,
-  ...rest
-}) => {
+let IconAIcChevronleft16: FunctionComponent<Props> = ({ size, color, ...rest }) => {
   return (
     <Svg viewBox="0 0 1024 1024" width={size} height={size} {...rest}>
       <Path
@@ -30,8 +26,6 @@ IconAIcChevronleft16.defaultProps = {
   size: 18,
 };
 
-IconAIcChevronleft16 = React.memo
-  ? React.memo(IconAIcChevronleft16)
-  : IconAIcChevronleft16;
+IconAIcChevronleft16 = React.memo ? React.memo(IconAIcChevronleft16) : IconAIcChevronleft16;
 
 export default IconAIcChevronleft16;

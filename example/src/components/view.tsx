@@ -1,10 +1,6 @@
 import { useTheme } from '@react-navigation/native';
 import * as React from 'react';
-import {
-  TouchableOpacity as _TouchableOpacity,
-  View as DefaultView,
-  ViewProps,
-} from 'react-native';
+import { View as DefaultView, ViewProps } from 'react-native';
 import { palette } from '../theme/palette';
 
 export function ThemeView(props: ViewProps) {

@@ -1,7 +1,5 @@
 import { useRef } from 'react';
 import { Dimensions, Platform } from 'react-native';
-import type Animated from 'react-native-reanimated';
-import { useSharedValue } from 'react-native-reanimated';
 import type { RippleRef } from 'src/components/ripple';
 
 export const normalize = (size: number) => size;
@@ -15,26 +13,12 @@ export interface Vector<T = number> {
   x: T;
   y: T;
 }
-export const useVector = (
-  x1 = 0,
-  y1?: number,
-): Vector<Animated.SharedValue<number>> => {
-  const x = useSharedValue(x1);
-  const y = useSharedValue(y1 ?? x1);
-  return { x, y };
-};
 
 export const useRefs = () => {
-  const pan = useRef(null);
-  const tap = useRef(null);
-  const doubleTap = useRef(null);
   const rippleLeft = useRef<RippleRef>(null);
   const rippleRight = useRef<RippleRef>(null);
 
   return {
-    pan,
-    tap,
-    doubleTap,
     rippleLeft,
     rippleRight,
   };

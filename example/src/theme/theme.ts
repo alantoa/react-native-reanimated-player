@@ -15,7 +15,7 @@ export const DarkTheme: CustomTheme = {
 };
 export const LightTheme: CustomTheme = {
   colors: {
-    background: `rgb(255, 255, 255)`,
+    background: 'rgb(255, 255, 255)',
     border: 'rgb(236, 236, 236)',
     card: 'rgb(18, 18, 18)',
     notification: 'rgb(255, 69, 58)',
