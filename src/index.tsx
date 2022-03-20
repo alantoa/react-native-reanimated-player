@@ -21,6 +21,7 @@ import {
   AwesomeSliderProps,
 } from 'react-native-awesome-slider/src/index';
 import { clamp } from 'react-native-awesome-slider/src/utils';
+import type { PanGesture } from 'react-native-gesture-handler';
 import { Gesture } from 'react-native-gesture-handler';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Orientation, { OrientationType } from 'react-native-orientation-locker';
@@ -87,14 +88,16 @@ export type VideoProps = VideoProperties & {
     | 'bubbleWidth'
     | 'bubbleTranslateY'
   >;
-  panTranslationY?: Animated.SharedValue<number>;
-  panVelocityY?: Animated.SharedValue<number>;
   videoHeight: Animated.SharedValue<number>;
-  customContainerAnimationStyle?: AnimatedStyleProp<ViewStyle>;
+  customAnimationStyle?: AnimatedStyleProp<ViewStyle>;
+  onCustomPanGesture?: PanGesture;
 };
 export type VideoPlayerRef = {
   setPlay: () => void;
   setPause: () => void;
+  toggleFullSreen: (isFullScreen: boolean) => void;
+  toggleControlViewOpacity: (isShow: boolean) => void;
+  setSeekTo: (second: number) => void;
 };
 
 const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
@@ -129,10 +132,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       onPausedChange,
       onTapPause,
       sliderProps,
-      panTranslationY,
-      panVelocityY,
       videoHeight,
-      customContainerAnimationStyle,
+      customAnimationStyle,
+      onCustomPanGesture,
       ...rest
     },
     ref,
@@ -178,6 +180,16 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
         checkTapTakesEffect();
         pause();
       },
+      toggleFullSreen: (isFullScrren: boolean) => {
+        isFullScrren ? enterFullScreen() : exitFullScreen();
+      },
+      toggleControlViewOpacity: (isShow: boolean) => {
+        'worklet';
+        isShow ? showControlAnimation() : hideControlAnimation();
+      },
+      setSeekTo: (seconds: number) => {
+        seekTo(seconds);
+      },
     }));
     /**
      * refs
@@ -205,7 +217,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     const videoScale = useSharedValue(1);
     const videoTransY = useSharedValue(0);
     const panIsVertical = useSharedValue(false);
-    const panIsToTop = useSharedValue(false);
 
     const doubleTapIsAlive = useSharedValue(false);
 
@@ -214,14 +225,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     const isScrubbing = useSharedValue(false);
     const isSeeking = useRef(false);
     const progress = useSharedValue(0);
-    const defaultContainerStyle = useAnimatedStyle(() => {
-      return { height: videoHeight.value };
-    }, []);
-    const containerStyle = customContainerAnimationStyle
-      ? customContainerAnimationStyle
-      : defaultContainerStyle;
-
-    const videoStyle = useAnimatedStyle(() => {
+    const defaultVideoStyle = useAnimatedStyle(() => {
       return {
         transform: [
           {
@@ -231,8 +235,12 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
             translateY: videoTransY.value,
           },
         ],
+        height: videoHeight.value,
       };
     }, []);
+    const videoStyle = customAnimationStyle
+      ? customAnimationStyle
+      : defaultVideoStyle;
 
     const bottomControlStyle = useAnimatedStyle(() => {
       return {
@@ -371,14 +379,21 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     };
 
     /**
-     * Animation to show controls...opposite of
-     * above...move onto the screen and then
+     * Animation to show controls
      * fade in.
      */
     const showControlAnimation = () => {
       'worklet';
       controlViewOpacity.value = withTiming(1, controlAnimteConfig);
       setControlTimeout();
+    };
+    /**
+     * Animation to show controls
+     * fade out.
+     */
+    const hideControlAnimation = () => {
+      'worklet';
+      controlViewOpacity.value = withTiming(0, controlAnimteConfig);
     };
     /**
      * check on tap icon
@@ -451,14 +466,12 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     /**
      * on pan event
      */
-    const onPanGesture = Gesture.Pan()
-      .onStart(({ velocityY, velocityX, translationY }) => {
+    const defalutPanGesture = Gesture.Pan()
+      .onStart(({ velocityY, velocityX }) => {
         panIsVertical.value = Math.abs(velocityY) > Math.abs(velocityX);
-        panIsToTop.value = translationY < 0;
       })
-      .onUpdate(({ translationY, velocityY }) => {
+      .onUpdate(({ translationY }) => {
         controlViewOpacity.value = withTiming(0, { duration: 100 });
-
         if (fullScreen.value) {
           if (translationY > 0 && Math.abs(translationY) < 100) {
             videoScale.value = clamp(
@@ -469,22 +482,13 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
             videoTransY.value = translationY;
           }
         } else {
-          if (panTranslationY && !panIsToTop.value) {
-            panTranslationY.value = translationY;
-          }
-          if (panVelocityY && !panIsToTop.value) {
-            panVelocityY.value = velocityY;
-          }
-          if (!panIsToTop.value) {
-            return;
-          }
           if (translationY < 0 && Math.abs(translationY) < 40) {
             videoScale.value = Math.abs(translationY) * 0.012 + 1;
           }
         }
       })
-      .onEnd(({ translationY }) => {
-        if (!panIsVertical.value) {
+      .onEnd(({ translationY }, success) => {
+        if (!panIsVertical.value && !success) {
           return;
         }
         if (fullScreen.value) {
@@ -492,9 +496,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
             runOnJS(exitFullScreen)();
           }
         } else {
-          if (!panIsToTop.value) {
-            return;
-          }
           if (-translationY >= 40) {
             runOnJS(enterFullScreen)();
           }
@@ -502,6 +503,10 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
         videoTransY.value = 0;
         videoScale.value = withTiming(1);
       });
+
+    const onPanGesture = onCustomPanGesture
+      ? onCustomPanGesture
+      : defalutPanGesture;
 
     const singleTapHandler = Gesture.Tap().onEnd((_event, success) => {
       if (success) {
@@ -771,8 +776,8 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
         />
         <GestureDetector gesture={gesture}>
           <Animated.View style={[styles.container, { paddingTop: insets.top }]}>
-            <Animated.View style={[styles.viewContainer]}>
-              <Animated.View style={[containerStyle, videoStyle]}>
+            <View style={styles.viewContainer}>
+              <Animated.View style={[videoStyle]}>
                 <Video
                   {...rest}
                   ref={videoPlayer}
@@ -1026,7 +1031,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                   </Animated.View>
                 </Ripple>
               </Animated.View>
-            </Animated.View>
+            </View>
 
             {isIos && (
               <View

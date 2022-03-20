@@ -5,8 +5,7 @@ import {
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
 import { useTheme } from '@react-navigation/native';
-import React, { useCallback, useRef } from 'react';
-import { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   Dimensions,
   Image,
@@ -19,22 +18,25 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { clamp } from 'react-native-awesome-slider/src/utils';
+import { Gesture } from 'react-native-gesture-handler';
+import InkWell from 'react-native-inkwell';
 import Animated, {
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withSpring,
 } from 'react-native-reanimated';
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { mb, mr, mt } from '../utils/ui-tools';
-import VideoPlayer, { VideoPlayerRef, VideoProps } from '../../../src';
+import VideoPlayer, { VideoPlayerRef } from '../../../src';
 import { Text, ThemeView } from '../components';
 import { Icon } from '../components/icon';
 import type { IconNames } from '../components/iconfont';
 import { palette } from '../theme/palette';
-import InkWell from 'react-native-inkwell';
-import { clamp } from 'react-native-awesome-slider/src/utils';
+import { mb, mr, mt } from '../utils/ui-tools';
 const px2dp = (px: number) => PixelRatio.roundToNearestPixel(px);
 export const { width, height, scale, fontScale } = Dimensions.get('window');
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
@@ -76,7 +78,8 @@ const options: { icon: IconNames; title: string }[] = [
     title: 'Setting',
   },
 ];
-
+const MIN_OPEN_SNAP_POINT = 0;
+const MAX_SNAP_POINT = height - 400;
 export const Example = () => {
   const [paused, setPaused] = useState(true);
   const insets = useSafeAreaInsets();
@@ -90,28 +93,37 @@ export const Example = () => {
   const isTapPaused = useRef(paused);
   const sheetPrevIndex = useRef(-1);
   const indexValue = useSharedValue(0);
+
+  const sheetTranslationY = useSharedValue(0);
   const panTranslationY = useSharedValue(0);
-  const panVelocityY = useSharedValue(0);
 
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
   const videoHeight = useSharedValue(VIDEO_DEFAULT_HEIGHT);
-  const pageStyle = useAnimatedStyle(() => {
-    // console.log(panTranslationY.value, panVelocityY.value);
 
+  const panIsVertical = useSharedValue(false);
+
+  const pageStyle = useAnimatedStyle(() => {
+    const translateY = panTranslationY.value + sheetTranslationY.value;
+    panTranslationY.value;
     return {
       transform: [
         {
-          translateY: clamp(panTranslationY.value, 0, height),
+          translateY: clamp(translateY, MIN_OPEN_SNAP_POINT, MAX_SNAP_POINT),
         },
       ],
     };
   });
 
-  const customContainerAnimationStyle = useAnimatedStyle(() => {
+  const customAnimationStyle = useAnimatedStyle(() => {
+    const translateY = panTranslationY.value + sheetTranslationY.value;
     return {
       transform: [
         {
-          translateY: clamp(panTranslationY.value, 0, height),
+          translateY: clamp(
+            translateY * 0.3,
+            MIN_OPEN_SNAP_POINT,
+            MAX_SNAP_POINT,
+          ),
         },
       ],
       height: videoHeight.value,
@@ -237,6 +249,38 @@ export const Example = () => {
     ),
     [],
   );
+  const seek = () => {
+    videoPlayerRef.current?.setSeekTo(100);
+  };
+
+  /**
+   * on pan event
+   */
+  const panGesture = Gesture.Pan()
+    .onStart(({ velocityY, velocityX }) => {
+      panIsVertical.value = Math.abs(velocityY) > Math.abs(velocityX);
+      videoPlayerRef.current?.toggleControlViewOpacity(false);
+      runOnJS(seek)();
+    })
+    .onUpdate(({ translationY }) => {
+      if (!panIsVertical.value) {
+        return;
+      }
+      panTranslationY.value = translationY;
+    })
+    .onEnd(({ velocityY }, success) => {
+      // TODO
+      if (!success && velocityY < 300) return;
+      sheetTranslationY.value = sheetTranslationY.value + panTranslationY.value;
+      panTranslationY.value = 0;
+      const destSnapPoint =
+        sheetTranslationY.value < MAX_SNAP_POINT
+          ? MAX_SNAP_POINT
+          : MIN_OPEN_SNAP_POINT;
+      sheetTranslationY.value = withSpring(destSnapPoint, {
+        mass: 0.5,
+      });
+    });
   return (
     <BottomSheetModalProvider>
       <SafeAreaView style={styles.view} edges={['left', 'right']}>
@@ -271,10 +315,9 @@ export const Example = () => {
               bubbleWidth: 120,
               bubbleMaxWidth: 120,
             }}
-            panTranslationY={panTranslationY}
-            panVelocityY={panVelocityY}
             videoHeight={videoHeight}
-            customContainerAnimationStyle={customContainerAnimationStyle}
+            customAnimationStyle={customAnimationStyle}
+            onCustomPanGesture={panGesture}
           />
           <View
             style={[
