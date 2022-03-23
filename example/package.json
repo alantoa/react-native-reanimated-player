@@ -52,7 +52,7 @@
     "lottie-react-native": "*",
     "react-native-awesome-slider": "^0.1.14",
     "react-native-gesture-handler": "1.10.3",
-    "react-native-reanimated": ">2",
+    "react-native-reanimated": ">=2.0.0",
     "react-native-redash": "^16",
     "react-native-video": "*"
   },

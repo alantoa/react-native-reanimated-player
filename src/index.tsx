@@ -16,14 +16,13 @@ import {
   ViewStyle,
 } from 'react-native';
 import {
+  AwesomeSliderProps,
   Slider,
   SliderThemeType,
-  AwesomeSliderProps,
 } from 'react-native-awesome-slider/src/index';
 import { clamp } from 'react-native-awesome-slider/src/utils';
 import type { PanGesture } from 'react-native-gesture-handler';
-import { Gesture } from 'react-native-gesture-handler';
-import { GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Orientation, { OrientationType } from 'react-native-orientation-locker';
 import Animated, {
   AnimatedStyleProp,
@@ -49,7 +48,6 @@ import { palette } from './theme/palette';
 import { bin, isIos, useRefs } from './utils';
 import { VideoLoader } from './video-loading';
 import { formatTime, formatTimeToMins, secondToTime } from './video-utils';
-
 export const { width, height, scale, fontScale } = Dimensions.get('window');
 
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
@@ -90,6 +88,7 @@ export type VideoProps = VideoProperties & {
   >;
   videoHeight: Animated.SharedValue<number>;
   customAnimationStyle?: AnimatedStyleProp<ViewStyle>;
+  controlViewOpacityValue?: Animated.SharedValue<number>;
   onCustomPanGesture?: PanGesture;
 };
 export type VideoPlayerRef = {
@@ -209,6 +208,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
 
     const backdropOpacity = useSharedValue(0);
     const controlViewOpacity = useSharedValue(showOnStart ? 1 : 0);
+
     const autoPlayTextAnimation = useSharedValue(0);
     const doubleLeftOpacity = useSharedValue(0);
     const doubleRightOpacity = useSharedValue(0);
@@ -270,7 +270,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     const bottomSliderStyle = useAnimatedStyle(() => {
       return {
         opacity: withTiming(bin(!fullScreen.value)),
-        top: videoHeight.value + insets.top,
       };
     });
     const fullScreenSliderStyle = useAnimatedStyle(() => {
@@ -286,6 +285,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     const backdropStyles = useAnimatedStyle(() => {
       return {
         opacity: backdropOpacity.value,
+        marginTop: videoHeight.value + insets.top,
       };
     });
     const autoPlayTextStyle = useAnimatedStyle(() => {
@@ -775,263 +775,273 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
           backgroundColor={'#000'}
         />
         <GestureDetector gesture={gesture}>
-          <Animated.View style={[styles.container, { paddingTop: insets.top }]}>
-            <View style={styles.viewContainer}>
-              <Animated.View style={[videoStyle]}>
-                <Video
-                  {...rest}
-                  ref={videoPlayer}
-                  resizeMode={state.resizeMode}
-                  volume={state.volume}
-                  paused={paused}
-                  muted={state.muted}
-                  rate={state.rate}
-                  onLoadStart={onLoadStart}
-                  style={[styles.video, style]}
-                  source={source}
-                  onLoad={onLoad}
-                  onSeek={onSeek}
-                  onEnd={onEnd}
-                  onProgress={onProgress}
-                  fullscreenAutorotate={true}
-                />
-              </Animated.View>
-              <VideoLoader loading={loading} />
+          <Animated.View
+            style={[
+              styles.container,
+              videoStyle,
+              { marginTop: insets.top },
+              style,
+            ]}>
+            <Video
+              {...rest}
+              ref={videoPlayer}
+              resizeMode={state.resizeMode}
+              volume={state.volume}
+              paused={paused}
+              muted={state.muted}
+              rate={state.rate}
+              onLoadStart={onLoadStart}
+              style={styles.video}
+              source={source}
+              onLoad={onLoad}
+              onSeek={onSeek}
+              onEnd={onEnd}
+              onProgress={onProgress}
+              fullscreenAutorotate={true}
+            />
+            <VideoLoader loading={loading} />
+            <Animated.View style={StyleSheet.absoluteFillObject}>
+              <Animated.View style={[styles.controlView, controlViewStyles]}>
+                <Animated.View
+                  hitSlop={hitSlop}
+                  style={[
+                    controlStyle.group,
+                    styles.topControls,
+                    topControlStyle,
+                  ]}>
+                  <View style={styles.back}>
+                    {Boolean(onTapBack) && (
+                      <TapControler onPress={onBackTapHandler}>
+                        <Image
+                          source={require('./assets/right_16.png')}
+                          style={styles.back}
+                        />
+                      </TapControler>
+                    )}
+                  </View>
+                  <View style={controlStyle.line}>
+                    {Boolean(onToggleAutoPlay) && (
+                      <Animated.View
+                        style={[controlStyle.autoPlayText, autoPlayTextStyle]}>
+                        <Text
+                          tx={
+                            allowAutoPlayVideo
+                              ? 'Autoplay is on'
+                              : 'Autoplay is off'
+                          }
+                          t4
+                          color={'#fff'}
+                        />
+                      </Animated.View>
+                    )}
 
-              <Animated.View style={StyleSheet.absoluteFillObject}>
-                <Animated.View style={[styles.controlView, controlViewStyles]}>
-                  <Animated.View
-                    hitSlop={hitSlop}
-                    style={[
-                      controlStyle.group,
-                      styles.topControls,
-                      topControlStyle,
-                    ]}>
-                    <View style={styles.back}>
-                      {Boolean(onTapBack) && (
-                        <TapControler onPress={onBackTapHandler}>
-                          <Image
-                            source={require('./assets/right_16.png')}
-                            style={styles.back}
-                          />
-                        </TapControler>
-                      )}
-                    </View>
-                    <View style={controlStyle.line}>
-                      {Boolean(onToggleAutoPlay) && (
-                        <Animated.View
-                          style={[
-                            controlStyle.autoPlayText,
-                            autoPlayTextStyle,
-                          ]}>
-                          <Text
-                            tx={
-                              allowAutoPlayVideo
-                                ? 'Autoplay is on'
-                                : 'Autoplay is off'
-                            }
-                            t4
-                            color={'#fff'}
-                          />
-                        </Animated.View>
-                      )}
-
-                      {Boolean(onToggleAutoPlay) && (
-                        <TapControler
-                          onPress={toggleAutoPlay}
-                          style={controlStyle.autoPlay}>
-                          <AnimatedLottieView
-                            animatedProps={autoPlayAnimatedProps}
-                            source={require('./assets/lottie-auto-play.json')}
-                          />
-                        </TapControler>
-                      )}
-                      {Boolean(onTapMore) && (
-                        <TapControler onPress={onMoreTapHandler}>
-                          <Image
-                            source={require('./assets/more_24.png')}
-                            style={styles.more}
-                          />
-                        </TapControler>
-                      )}
-                    </View>
-                  </Animated.View>
-                  <Animated.View
-                    style={[
-                      controlStyle.group,
-                      styles.topControls,
-                      styles.topFullscreenControls,
-                      topFullscreenControlStyle,
-                    ]}
-                    pointerEvents={isFullscreen ? 'auto' : 'none'}>
-                    <View style={controlStyle.line}>
-                      {Boolean(onTapBack) && (
-                        <TapControler onPress={onBackTapHandler}>
-                          <Image
-                            source={require('./assets/right_16.png')}
-                            style={styles.back}
-                          />
-                        </TapControler>
-                      )}
-                      <Text
-                        tx={headerBarTitle}
-                        h5
-                        numberOfLines={1}
-                        style={styles.headerBarTitle}
-                        color={palette.W(1)}
-                      />
-                    </View>
-                    <View style={controlStyle.line}>
-                      {Boolean(onToggleAutoPlay) && (
-                        <Animated.View
-                          style={[
-                            controlStyle.autoPlayText,
-                            autoPlayTextStyle,
-                          ]}>
-                          <Text tx="自动播放已开启" t4 color={'#fff'} />
-                        </Animated.View>
-                      )}
-                      {Boolean(onToggleAutoPlay) && (
-                        <TapControler
-                          onPress={toggleAutoPlay}
-                          style={controlStyle.autoPlay}>
-                          <AnimatedLottieView
-                            animatedProps={autoPlayAnimatedProps}
-                            source={require('./assets/lottie-auto-play.json')}
-                          />
-                        </TapControler>
-                      )}
-                      {Boolean(onTapMore) && (
-                        <TapControler onPress={onMoreTapHandler}>
-                          <Image
-                            source={require('./assets/more_24.png')}
-                            style={styles.more}
-                          />
-                        </TapControler>
-                      )}
-                    </View>
-                  </Animated.View>
-                  <View style={controlStyle.pauseView}>
+                    {Boolean(onToggleAutoPlay) && (
+                      <TapControler
+                        onPress={toggleAutoPlay}
+                        style={controlStyle.autoPlay}>
+                        <AnimatedLottieView
+                          animatedProps={autoPlayAnimatedProps}
+                          source={require('./assets/lottie-auto-play.json')}
+                        />
+                      </TapControler>
+                    )}
+                    {Boolean(onTapMore) && (
+                      <TapControler onPress={onMoreTapHandler}>
+                        <Image
+                          source={require('./assets/more_24.png')}
+                          style={styles.more}
+                        />
+                      </TapControler>
+                    )}
+                  </View>
+                </Animated.View>
+                <Animated.View
+                  style={[
+                    controlStyle.group,
+                    styles.topControls,
+                    styles.topFullscreenControls,
+                    topFullscreenControlStyle,
+                  ]}
+                  pointerEvents={isFullscreen ? 'auto' : 'none'}>
+                  <View style={controlStyle.line}>
+                    {Boolean(onTapBack) && (
+                      <TapControler onPress={onBackTapHandler}>
+                        <Image
+                          source={require('./assets/right_16.png')}
+                          style={styles.back}
+                        />
+                      </TapControler>
+                    )}
+                    <Text
+                      tx={headerBarTitle}
+                      h5
+                      numberOfLines={1}
+                      style={styles.headerBarTitle}
+                      color={palette.W(1)}
+                    />
+                  </View>
+                  <View style={controlStyle.line}>
+                    {Boolean(onToggleAutoPlay) && (
+                      <Animated.View
+                        style={[controlStyle.autoPlayText, autoPlayTextStyle]}>
+                        <Text tx="自动播放已开启" t4 color={'#fff'} />
+                      </Animated.View>
+                    )}
+                    {Boolean(onToggleAutoPlay) && (
+                      <TapControler
+                        onPress={toggleAutoPlay}
+                        style={controlStyle.autoPlay}>
+                        <AnimatedLottieView
+                          animatedProps={autoPlayAnimatedProps}
+                          source={require('./assets/lottie-auto-play.json')}
+                        />
+                      </TapControler>
+                    )}
+                    {Boolean(onTapMore) && (
+                      <TapControler onPress={onMoreTapHandler}>
+                        <Image
+                          source={require('./assets/more_24.png')}
+                          style={styles.more}
+                        />
+                      </TapControler>
+                    )}
+                  </View>
+                </Animated.View>
+                <View style={controlStyle.pauseView}>
+                  <TapControler
+                    onPress={onPauseTapHandler}
+                    style={controlStyle.pause}>
+                    <AnimatedLottieView
+                      animatedProps={playAnimatedProps}
+                      source={require('./assets/lottie-play.json')}
+                    />
+                  </TapControler>
+                </View>
+                <Animated.View
+                  style={[
+                    controlStyle.group,
+                    controlStyle.bottomControls,
+                    bottomControlStyle,
+                  ]}>
+                  <View
+                    style={[controlStyle.bottomControlGroup, controlStyle.row]}>
+                    <TapControler onPress={toggleTimer}>
+                      <Text style={controlStyle.timerText}>
+                        <Text
+                          style={controlStyle.timerText}
+                          color={palette.W(1)}
+                          tx={calculateTime()}
+                          t3
+                        />
+                        <Text
+                          style={controlStyle.timerText}
+                          color={palette.W(1)}
+                          tx={` / ${formatTimeToMins(player.current.duration)}`}
+                          t3
+                        />
+                      </Text>
+                    </TapControler>
                     <TapControler
-                      onPress={onPauseTapHandler}
-                      style={controlStyle.pause}>
+                      onPress={toggleFullScreen}
+                      style={controlStyle.fullToggle}>
                       <AnimatedLottieView
-                        animatedProps={playAnimatedProps}
-                        source={require('./assets/lottie-play.json')}
+                        animatedProps={fullscreenAnimatedProps}
+                        source={require('./assets/lottie-fullscreen.json')}
                       />
                     </TapControler>
                   </View>
                   <Animated.View
                     style={[
-                      controlStyle.group,
-                      controlStyle.bottomControls,
-                      bottomControlStyle,
+                      {
+                        width:
+                          height -
+                          insetsRef.current.top -
+                          insetsRef.current.bottom -
+                          40,
+                      },
+                      fullScreenSliderStyle,
                     ]}>
-                    <View
-                      style={[
-                        controlStyle.bottomControlGroup,
-                        controlStyle.row,
-                      ]}>
-                      <TapControler onPress={toggleTimer}>
-                        <Text style={controlStyle.timerText}>
-                          <Text
-                            style={controlStyle.timerText}
-                            color={palette.W(1)}
-                            tx={calculateTime()}
-                            t3
-                          />
-                          <Text
-                            style={controlStyle.timerText}
-                            color={palette.W(1)}
-                            tx={` / ${formatTimeToMins(
-                              player.current.duration,
-                            )}`}
-                            t3
-                          />
-                        </Text>
-                      </TapControler>
-                      <TapControler
-                        onPress={toggleFullScreen}
-                        style={controlStyle.fullToggle}>
-                        <AnimatedLottieView
-                          animatedProps={fullscreenAnimatedProps}
-                          source={require('./assets/lottie-fullscreen.json')}
-                        />
-                      </TapControler>
-                    </View>
-                    <Animated.View
-                      style={[
-                        {
-                          width:
-                            height -
-                            insetsRef.current.top -
-                            insetsRef.current.bottom -
-                            40,
-                        },
-                        fullScreenSliderStyle,
-                      ]}>
-                      <Slider
-                        theme={theme}
-                        progress={progress}
-                        onSlidingComplete={onSlidingComplete}
-                        onSlidingStart={onSlidingStart}
-                        minimumValue={min}
-                        maximumValue={max}
-                        isScrubbing={isScrubbing}
-                        bubble={secondToTime}
-                        disableTapEvent
-                        onTap={onTapSlider}
-                        thumbScaleValue={controlViewOpacity}
-                        thumbWidth={8}
-                        sliderHeight={2}
-                        {...sliderProps}
-                      />
-                    </Animated.View>
+                    <Slider
+                      theme={theme}
+                      progress={progress}
+                      onSlidingComplete={onSlidingComplete}
+                      onSlidingStart={onSlidingStart}
+                      minimumValue={min}
+                      maximumValue={max}
+                      isScrubbing={isScrubbing}
+                      bubble={secondToTime}
+                      disableTapEvent
+                      onTap={onTapSlider}
+                      thumbScaleValue={controlViewOpacity}
+                      thumbWidth={8}
+                      sliderHeight={2}
+                      {...sliderProps}
+                    />
                   </Animated.View>
                 </Animated.View>
-                <Ripple
-                  ref={rippleLeft}
-                  onAnimationEnd={() => {
-                    doubleLeftOpacity.value = 0;
-                  }}
-                  style={[controlStyle.doubleTap, controlStyle.leftDoubleTap]}
-                  containerStyle={[{ width: leftDoubleTapBoundary }]}>
-                  <Animated.View style={getDoubleLeftStyle}>
-                    <LottieView
-                      source={require('./assets/lottie-seek-back.json')}
-                      autoPlay
-                      loop
-                      style={controlStyle.backStep}
-                    />
-                    <Text tx="10s" isCenter color={palette.W(1)} t5 />
-                  </Animated.View>
-                </Ripple>
-
-                <Ripple
-                  ref={rippleRight}
-                  onAnimationEnd={() => {
-                    doubleRightOpacity.value = 0;
-                  }}
-                  style={[
-                    controlStyle.doubleTap,
-                    controlStyle.rightDoubleTapContainer,
-                  ]}
-                  containerStyle={[{ width: leftDoubleTapBoundary }]}>
-                  <Animated.View style={getDoubleRightStyle}>
-                    <LottieView
-                      source={require('./assets/lottie-seek-back.json')}
-                      autoPlay
-                      loop
-                      style={[
-                        controlStyle.backStep,
-                        { transform: [{ rotate: '90deg' }] },
-                      ]}
-                    />
-                    <Text tx="10s" isCenter color={palette.W(1)} t5 />
-                  </Animated.View>
-                </Ripple>
               </Animated.View>
-            </View>
+              <Ripple
+                ref={rippleLeft}
+                onAnimationEnd={() => {
+                  doubleLeftOpacity.value = 0;
+                }}
+                style={[controlStyle.doubleTap, controlStyle.leftDoubleTap]}
+                containerStyle={[{ width: leftDoubleTapBoundary }]}>
+                <Animated.View style={getDoubleLeftStyle}>
+                  <LottieView
+                    source={require('./assets/lottie-seek-back.json')}
+                    autoPlay
+                    loop
+                    style={controlStyle.backStep}
+                  />
+                  <Text tx="10s" isCenter color={palette.W(1)} t5 />
+                </Animated.View>
+              </Ripple>
+
+              <Ripple
+                ref={rippleRight}
+                onAnimationEnd={() => {
+                  doubleRightOpacity.value = 0;
+                }}
+                style={[
+                  controlStyle.doubleTap,
+                  controlStyle.rightDoubleTapContainer,
+                ]}
+                containerStyle={[{ width: leftDoubleTapBoundary }]}>
+                <Animated.View style={getDoubleRightStyle}>
+                  <LottieView
+                    source={require('./assets/lottie-seek-back.json')}
+                    autoPlay
+                    loop
+                    style={[
+                      controlStyle.backStep,
+                      { transform: [{ rotate: '90deg' }] },
+                    ]}
+                  />
+                  <Text tx="10s" isCenter color={palette.W(1)} t5 />
+                </Animated.View>
+              </Ripple>
+              <Animated.View style={[styles.slider, bottomSliderStyle]}>
+                <Slider
+                  theme={theme}
+                  progress={progress}
+                  onSlidingComplete={onSlidingComplete}
+                  onSlidingStart={onSlidingStart}
+                  minimumValue={min}
+                  maximumValue={max}
+                  isScrubbing={isScrubbing}
+                  bubble={(value: number) => {
+                    return secondToTime(value);
+                  }}
+                  disableTapEvent
+                  onTap={onTapSlider}
+                  thumbScaleValue={controlViewOpacity}
+                  thumbWidth={12}
+                  sliderHeight={2}
+                  {...sliderProps}
+                />
+              </Animated.View>
+            </Animated.View>
 
             {isIos && (
               <View
@@ -1045,26 +1055,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
           style={[styles.backdrop, backdropStyles]}
           pointerEvents={'none'}
         />
-        <Animated.View style={[styles.slider, bottomSliderStyle]}>
-          <Slider
-            theme={theme}
-            progress={progress}
-            onSlidingComplete={onSlidingComplete}
-            onSlidingStart={onSlidingStart}
-            minimumValue={min}
-            maximumValue={max}
-            isScrubbing={isScrubbing}
-            bubble={(value: number) => {
-              return secondToTime(value);
-            }}
-            disableTapEvent
-            onTap={onTapSlider}
-            thumbScaleValue={controlViewOpacity}
-            thumbWidth={12}
-            sliderHeight={2}
-            {...sliderProps}
-          />
-        </Animated.View>
       </>
     );
   },
@@ -1088,19 +1078,17 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...StyleSheet.absoluteFillObject,
   },
-  fullscreen: {
-    ...StyleSheet.absoluteFillObject,
-  },
   headerBarTitle: {
     marginLeft: 20,
     maxWidth: height / 2,
   },
   slider: {
     width: width,
-    zIndex: 1000,
+    zIndex: 1,
     position: 'absolute',
     left: 0,
     right: 0,
+    bottom: 0,
   },
 
   stopBackView: {
@@ -1119,12 +1107,10 @@ const styles = StyleSheet.create({
     top: 32,
   },
   video: {
-    overflow: 'hidden',
-    ...StyleSheet.absoluteFillObject,
-  },
-  viewContainer: {
     width: '100%',
+    height: '100%',
   },
+
   back: {
     width: 16,
     height: 16,
@@ -1139,12 +1125,7 @@ const styles = StyleSheet.create({
     height: 24,
   },
   container: {
-    alignItems: 'center',
     backgroundColor: palette.B(1),
-    elevation: 10,
-    justifyContent: 'center',
-    zIndex: 10,
-    overflow: 'hidden',
   },
 });
 
