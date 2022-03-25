@@ -4,20 +4,30 @@
 import React, { FunctionComponent } from 'react';
 import { ViewProps } from 'react-native';
 import { GProps } from 'react-native-svg';
+import IconAdd from './IconAdd';
+import IconRoundadd from './IconRoundadd';
+import IconYoutubeShorts from './IconYoutubeShorts';
+import IconSubscriptions from './IconSubscriptions';
+import IconVideoLibrary from './IconVideoLibrary';
+import IconHome from './IconHome';
 import IconClose from './IconClose';
 import IconAIcChevrondown16 from './IconAIcChevrondown16';
-import IconAIcChevronleft16 from './IconAIcChevronleft16';
 import IconFlagoutline from './IconFlagoutline';
 import IconSetting from './IconSetting';
 import IconFeedback from './IconFeedback';
+export { default as IconAdd } from './IconAdd';
+export { default as IconRoundadd } from './IconRoundadd';
+export { default as IconYoutubeShorts } from './IconYoutubeShorts';
+export { default as IconSubscriptions } from './IconSubscriptions';
+export { default as IconVideoLibrary } from './IconVideoLibrary';
+export { default as IconHome } from './IconHome';
 export { default as IconClose } from './IconClose';
 export { default as IconAIcChevrondown16 } from './IconAIcChevrondown16';
-export { default as IconAIcChevronleft16 } from './IconAIcChevronleft16';
 export { default as IconFlagoutline } from './IconFlagoutline';
 export { default as IconSetting } from './IconSetting';
 export { default as IconFeedback } from './IconFeedback';
 
-export type IconNames = 'close' | 'a-ic_chevrondown_16' | 'a-ic_chevronleft_16' | 'flagoutline' | 'setting' | 'feedback';
+export type IconNames = 'add' | 'roundadd' | 'youtube-shorts' | 'subscriptions' | 'video_library' | 'home' | 'close' | 'a-ic_chevrondown_16' | 'flagoutline' | 'setting' | 'feedback';
 
 interface Props extends GProps, ViewProps {
   name: IconNames;
@@ -27,18 +37,28 @@ interface Props extends GProps, ViewProps {
 
 let IconFont: FunctionComponent<Props> = ({ name, ...rest }) => {
   switch (name) {
+    case 'add':
+      return <IconAdd key="1" {...rest} />;
+    case 'roundadd':
+      return <IconRoundadd key="2" {...rest} />;
+    case 'youtube-shorts':
+      return <IconYoutubeShorts key="3" {...rest} />;
+    case 'subscriptions':
+      return <IconSubscriptions key="4" {...rest} />;
+    case 'video_library':
+      return <IconVideoLibrary key="5" {...rest} />;
+    case 'home':
+      return <IconHome key="6" {...rest} />;
     case 'close':
-      return <IconClose key="1" {...rest} />;
+      return <IconClose key="7" {...rest} />;
     case 'a-ic_chevrondown_16':
-      return <IconAIcChevrondown16 key="2" {...rest} />;
-    case 'a-ic_chevronleft_16':
-      return <IconAIcChevronleft16 key="3" {...rest} />;
+      return <IconAIcChevrondown16 key="8" {...rest} />;
     case 'flagoutline':
-      return <IconFlagoutline key="4" {...rest} />;
+      return <IconFlagoutline key="9" {...rest} />;
     case 'setting':
-      return <IconSetting key="5" {...rest} />;
+      return <IconSetting key="10" {...rest} />;
     case 'feedback':
-      return <IconFeedback key="6" {...rest} />;
+      return <IconFeedback key="11" {...rest} />;
   }
 
   return null;
