@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import LottieView from 'lottie-react-native';
 import React, {
   forwardRef,
@@ -25,7 +26,6 @@ import type { PanGesture } from 'react-native-gesture-handler';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Orientation, { OrientationType } from 'react-native-orientation-locker';
 import Animated, {
-  AnimatedStyleProp,
   cancelAnimation,
   runOnJS,
   useAnimatedProps,
@@ -61,7 +61,6 @@ const AnimatedLottieView = Animated.createAnimatedComponent(LottieView);
 
 export type VideoProps = VideoProperties & {
   showOnStart?: boolean;
-  toggleResizeModeOnFullscreen?: boolean;
   onEnterFullscreen?: () => void;
   onExitFullscreen?: () => void;
   controlTimeout?: number;
@@ -85,11 +84,19 @@ export type VideoProps = VideoProperties & {
     | 'bubbleMaxWidth'
     | 'bubbleWidth'
     | 'bubbleTranslateY'
+    | 'disable'
   >;
   videoHeight: Animated.SharedValue<number>;
-  customAnimationStyle?: AnimatedStyleProp<ViewStyle>;
+  customAnimationStyle?: Animated.AnimateStyle<ViewStyle>;
   controlViewOpacityValue?: Animated.SharedValue<number>;
   onCustomPanGesture?: PanGesture;
+  isFullScreen: Animated.SharedValue<boolean>;
+  disableControl?: boolean;
+  renderBackIcon?: () => JSX.Element;
+  renderFullScreenBackIcon?: () => JSX.Element;
+
+  renderMore?: () => JSX.Element;
+  renderFullScreen?: () => JSX.Element;
 };
 export type VideoPlayerRef = {
   setPlay: () => void;
@@ -104,12 +111,8 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     {
       resizeMode = 'contain',
       showOnStart = true,
-      muted = false,
-      volume = 1,
-      rate = 1,
       source,
       style,
-      toggleResizeModeOnFullscreen = true,
       onEnterFullscreen,
       onExitFullscreen,
       controlTimeout = 2000,
@@ -126,6 +129,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
         maximumTrackTintColor: palette.B(0.6),
         cacheTrackTintColor: palette.G1(1),
         bubbleBackgroundColor: palette.B(0.8),
+        disableMinTrackTintColor: palette.Main(1),
       },
       paused,
       onPausedChange,
@@ -134,6 +138,12 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       videoHeight,
       customAnimationStyle,
       onCustomPanGesture,
+      isFullScreen,
+      disableControl,
+      renderBackIcon,
+      renderMore,
+      renderFullScreen,
+      renderFullScreenBackIcon,
       ...rest
     },
     ref,
@@ -151,19 +161,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
 
     const rightDoubleTapBoundary =
       dimensions.width - leftDoubleTapBoundary - insets.left - insets.right;
-    /**
-     * state
-     */
-    const [state, setState] = useState({
-      // Video
-      resizeMode: resizeMode,
-      muted: muted,
-      volume: volume,
-      rate: rate,
-      // Controls
-      error: false,
-      showRemainingTime: false,
-    });
+
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [loading, setIsLoading] = useState(false);
@@ -203,7 +201,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     /**
      * reanimated value
      */
-    const fullScreen = useSharedValue(false);
     const isLoadEnd = useSharedValue(false);
 
     const backdropOpacity = useSharedValue(0);
@@ -246,7 +243,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       return {
         transform: [
           {
-            translateY: fullScreen.value ? -42 : 0,
+            translateY: isFullScreen.value ? -42 : 0,
           },
         ],
       };
@@ -255,26 +252,26 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       return {
         transform: [
           {
-            translateY: fullScreen.value ? -42 : 0,
+            translateY: isFullScreen.value ? -42 : 0,
           },
         ],
-        opacity: withTiming(bin(!fullScreen.value)),
+        opacity: withTiming(bin(!isFullScreen.value)),
       };
     });
     const topFullscreenControlStyle = useAnimatedStyle(() => {
       return {
-        opacity: withTiming(bin(fullScreen.value)),
+        opacity: withTiming(bin(isFullScreen.value)),
       };
     });
 
     const bottomSliderStyle = useAnimatedStyle(() => {
       return {
-        opacity: withTiming(bin(!fullScreen.value)),
+        opacity: withTiming(bin(!isFullScreen.value)),
       };
     });
     const fullScreenSliderStyle = useAnimatedStyle(() => {
       return {
-        opacity: withTiming(bin(fullScreen.value)),
+        opacity: withTiming(bin(isFullScreen.value)),
       };
     });
     const controlViewStyles = useAnimatedStyle(() => {
@@ -315,7 +312,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     });
     const fullscreenAnimatedProps = useAnimatedProps(() => {
       return {
-        progress: withTiming(fullScreen.value ? 0.5 : 0),
+        progress: withTiming(isFullScreen.value ? 0.5 : 0),
       };
     });
     const autoPlayAnimatedProps = useAnimatedProps(() => {
@@ -335,7 +332,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
         'beforeRemove',
         (e: any) => {
           e?.preventDefault();
-          if (fullScreen.value) {
+          if (isFullScreen.value) {
             toggleFullScreen();
           } else {
             navigation.dispatch(e.data.action);
@@ -401,6 +398,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
      */
     const checkTapTakesEffect = () => {
       'worklet';
+      if (disableControl) {
+        return false;
+      }
       resetControlTimeout();
       if (controlViewOpacity.value === 0) {
         showControlAnimation();
@@ -417,25 +417,25 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
      * Toggle player full screen state on <Video> component
      */
     const enterFullScreen = () => {
+      onEnterFullscreen?.();
       StatusBar.setHidden(true, 'fade');
       backdropOpacity.value = 1;
       Orientation.lockToLandscape();
-      fullScreen.value = true;
+      isFullScreen.value = true;
       videoHeight.value = width;
-      onEnterFullscreen?.();
     };
 
     const exitFullScreen = () => {
+      onExitFullscreen?.();
       StatusBar.setHidden(false, 'fade');
       Orientation.lockToPortrait();
-      fullScreen.value = false;
+      isFullScreen.value = false;
       videoHeight.value = videoDefaultHeight;
-      onExitFullscreen?.();
       backdropOpacity.value = 0;
     };
     const toggleFullScreenOnJS = () => {
       Orientation.getOrientation(orientation => {
-        if (fullScreen.value || orientation !== OrientationType.PORTRAIT) {
+        if (isFullScreen.value || orientation !== OrientationType.PORTRAIT) {
           exitFullScreen();
           StatusBar.setHidden(false, 'fade');
         } else {
@@ -444,14 +444,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
         }
       });
 
-      setState({
-        ...state,
-        resizeMode: toggleResizeModeOnFullscreen
-          ? !isFullscreen
-            ? 'cover'
-            : 'contain'
-          : resizeMode,
-      });
       setIsFullscreen(!isFullscreen);
     };
     const toggleFullScreen = () => {
@@ -460,6 +452,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       if (!status) {
         return;
       }
+
       runOnJS(toggleFullScreenOnJS)();
     };
 
@@ -472,7 +465,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       })
       .onUpdate(({ translationY }) => {
         controlViewOpacity.value = withTiming(0, { duration: 100 });
-        if (fullScreen.value) {
+        if (isFullScreen.value) {
           if (translationY > 0 && Math.abs(translationY) < 100) {
             videoScale.value = clamp(
               0.9,
@@ -491,7 +484,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
         if (!panIsVertical.value && !success) {
           return;
         }
-        if (fullScreen.value) {
+        if (isFullScreen.value) {
           if (translationY >= 100) {
             runOnJS(exitFullScreen)();
           }
@@ -509,6 +502,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       : defalutPanGesture;
 
     const singleTapHandler = Gesture.Tap().onEnd((_event, success) => {
+      if (disableControl) {
+        return;
+      }
       if (success) {
         if (controlViewOpacity.value === 0) {
           controlViewOpacity.value = withTiming(1, controlAnimteConfig);
@@ -584,7 +580,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
      */
     const onBackTapHandlerOnJS = () => {
       Orientation.getOrientation(orientation => {
-        if (fullScreen.value || orientation !== OrientationType.PORTRAIT) {
+        if (isFullScreen.value || orientation !== OrientationType.PORTRAIT) {
           setIsFullscreen(false);
           exitFullScreen();
           StatusBar.setHidden(false, 'fade');
@@ -627,6 +623,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     };
 
     const onTapSlider = () => {
+      if (disableControl) {
+        return;
+      }
       if (controlViewOpacity.value === 0) {
         showControlAnimation();
       }
@@ -775,21 +774,12 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
           backgroundColor={'#000'}
         />
         <GestureDetector gesture={gesture}>
-          <Animated.View
-            style={[
-              styles.container,
-              videoStyle,
-              { marginTop: insets.top },
-              style,
-            ]}>
+          <Animated.View style={[styles.container, videoStyle, style]}>
             <Video
               {...rest}
               ref={videoPlayer}
-              resizeMode={state.resizeMode}
-              volume={state.volume}
+              resizeMode={resizeMode}
               paused={paused}
-              muted={state.muted}
-              rate={state.rate}
               onLoadStart={onLoadStart}
               style={styles.video}
               source={source}
@@ -812,10 +802,14 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                   <View style={styles.back}>
                     {Boolean(onTapBack) && (
                       <TapControler onPress={onBackTapHandler}>
-                        <Image
-                          source={require('./assets/right_16.png')}
-                          style={styles.back}
-                        />
+                        {renderBackIcon ? (
+                          renderBackIcon()
+                        ) : (
+                          <Image
+                            source={require('./assets/right_16.png')}
+                            style={styles.back}
+                          />
+                        )}
                       </TapControler>
                     )}
                   </View>
@@ -866,10 +860,14 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                   <View style={controlStyle.line}>
                     {Boolean(onTapBack) && (
                       <TapControler onPress={onBackTapHandler}>
-                        <Image
-                          source={require('./assets/right_16.png')}
-                          style={styles.back}
-                        />
+                        {renderFullScreenBackIcon ? (
+                          renderFullScreenBackIcon()
+                        ) : (
+                          <Image
+                            source={require('./assets/right_16.png')}
+                            style={styles.back}
+                          />
+                        )}
                       </TapControler>
                     )}
                     <Text
@@ -899,10 +897,14 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                     )}
                     {Boolean(onTapMore) && (
                       <TapControler onPress={onMoreTapHandler}>
-                        <Image
-                          source={require('./assets/more_24.png')}
-                          style={styles.more}
-                        />
+                        {renderMore ? (
+                          renderMore()
+                        ) : (
+                          <Image
+                            source={require('./assets/more_24.png')}
+                            style={styles.more}
+                          />
+                        )}
                       </TapControler>
                     )}
                   </View>
@@ -944,10 +946,14 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                     <TapControler
                       onPress={toggleFullScreen}
                       style={controlStyle.fullToggle}>
-                      <AnimatedLottieView
-                        animatedProps={fullscreenAnimatedProps}
-                        source={require('./assets/lottie-fullscreen.json')}
-                      />
+                      {renderFullScreen ? (
+                        renderFullScreen()
+                      ) : (
+                        <AnimatedLottieView
+                          animatedProps={fullscreenAnimatedProps}
+                          source={require('./assets/lottie-fullscreen.json')}
+                        />
+                      )}
                     </TapControler>
                   </View>
                   <Animated.View
@@ -1059,12 +1065,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     );
   },
 );
+VideoPlayer.displayName = 'VideoPlayer';
 export default VideoPlayer;
-/**
- * This object houses our styles. There's player
- * specific styles and control specific ones.
- * And then there's volume/seeker styles.
- */
+
 const styles = StyleSheet.create({
   backdrop: {
     backgroundColor: '#000',
@@ -1126,6 +1129,7 @@ const styles = StyleSheet.create({
   },
   container: {
     backgroundColor: palette.B(1),
+    width: '100%',
   },
 });
 

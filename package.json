@@ -83,15 +83,15 @@
     "typescript": "^4.4.4"
   },
   "peerDependencies": {
-    "@react-navigation/core": "*",
-    "lottie-react-native": "*",
+    "lottie-react-native": ">=4.0.0",
     "react": "*",
     "react-native": "*",
-    "react-native-awesome-slider": "*",
+    "react-native-awesome-slider": ">=2.0.0",
     "react-native-gesture-handler": ">=2.0.0",
     "react-native-orientation-locker": "*",
     "react-native-reanimated": ">=2.0.0",
-    "react-native-safe-area-context": "*"
+    "react-native-safe-area-context": "*",
+    "@react-navigation/core": "*"
   },
   "jest": {
     "preset": "react-native",
