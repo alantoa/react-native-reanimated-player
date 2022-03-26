@@ -66,7 +66,6 @@ export type VideoProps = VideoProperties & {
   onExitFullscreen?: () => void;
   controlTimeout?: number;
   videoDefaultHeight?: number;
-  videoDefaultWidth?: number;
   headerBarTitle?: string;
   onTapBack?: () => void;
   navigation?: any;

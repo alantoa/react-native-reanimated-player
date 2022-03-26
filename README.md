@@ -15,13 +15,21 @@ First you have to follow installation instructions of:
 
 - [react-native-awesome-slider](https://github.com/alantoa/react-native-awesome-slider/)
 - [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/)
-- [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/)
+- [react-native-gesture-handler v2 or v1](https://docs.swmansion.com/react-native-gesture-handler/)
 - [react-native-orientation-locker](https://github.com/wonday/react-native-orientation-locker/)
 - [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)
 - [react-native-video](https://github.com/react-native-video/react-native-video)
 
+If `react-native-gesture-handler` version >= 2:
+
 ```sh
 yarn add react-native-reanimated-player
+```
+
+else use v1:
+
+```sh
+yarn add react-native-reanimated-player@1
 ```
 
 ## Example usage
@@ -103,13 +111,6 @@ The `<VideoPlayer/>` component has the following configuration properties:
     <td>false</td>
   </tr>
   <tr>
-    <td>toggleResizeModeOnFullscreen</td>
-    <td>boolean</td>
-    <td>toggle resizeMode on fullscreen?</td>
-    <td>❌</td>
-    <td>true</td>
-  </tr>
-  <tr>
     <td>onEnterFullscreen</td>
     <td>function</td>
     <td>on enter fullscreen callback</td>
@@ -138,13 +139,6 @@ The `<VideoPlayer/>` component has the following configuration properties:
     <td>screenWidth * (9 / 16)</td>
   </tr>
   <tr>
-    <td>videoDefaultWidth</td>
-    <td>number</td>
-    <td>video default height</td>
-    <td>❌</td>
-    <td>screenWidth</td>
-  </tr>
-  <tr>
     <td>headerBarTitle</td>
     <td>string</td>
     <td>header bar title on fullscreen mode</td>
@@ -159,25 +153,11 @@ The `<VideoPlayer/>` component has the following configuration properties:
     <td>undefined</td>
   </tr>
   <tr>
-    <td>headerBarTitle</td>
-    <td>string</td>
-    <td>headerbar title on fullscreen mode</td>
-    <td>❌</td>
-    <td>undefined</td>
-  </tr>
-  <tr>
     <td>navigation</td>
     <td>any</td>
     <td>navigation</td>
     <td>❌</td>
     <td>undefined</td>
-  </tr>
-  <tr>
-    <td>initPaused</td>
-    <td>boolean</td>
-    <td>player init paused</td>
-    <td>❌</td>
-    <td>false</td>
   </tr>
   <tr>
     <td>autoPlay</td>
@@ -197,6 +177,105 @@ The `<VideoPlayer/>` component has the following configuration properties:
     <td>onTapMore</td>
     <td>function</td>
     <td>tap headerbar Icon-'More' callback</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+    <tr>
+    <td>doubleTapInterval</td>
+    <td>number</td>
+    <td>double tap interval</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+   <tr>
+    <td>paused</td>
+    <td>boolean</td>
+    <td>video paused</td>
+    <td>✅</td>
+    <td>undefined</td>
+  </tr>
+   <tr>
+    <td>onPausedChange</td>
+    <td>boolean</td>
+    <td>on change video paused</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+   <tr>
+    <td>onTapPause</td>
+    <td>function</td>
+    <td>on tap video paused</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+  <tr>
+    <td>sliderProps</td>
+    <td>object</td>
+    <td><a href="https://github.com/alantoa/react-native-awesome-slider/" >react-native-awesome-slider</a> props</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+
+   <tr>
+    <td>videoHeight</td>
+    <td>Animated.SharedValue</td>
+    <td>video height</td>
+    <td>✅</td>
+    <td> width * (9 / 16);</td>
+  </tr>
+    <tr>
+    <td>customAnimationStyle</td>
+    <td>Animated Viewstyle</td>
+    <td>video height</td>
+    <td>❌</td>
+    <td>width * (9 / 16);</td>
+  </tr>
+    <tr>
+    <td>onCustomPanGesture</td>
+    <td>PanGesture</td>
+    <td>custom pan gesture</td>
+    <td>❌</td>
+    <td>width * (9 / 16);</td>
+  </tr>
+   <tr>
+    <td>isFullScreen</td>
+    <td>Animated ShareValue</td>
+    <td>fullScreen status</td>
+    <td>✅</td>
+    <td>undefined</td>
+  </tr>
+   <tr>
+    <td>disableControl</td>
+    <td>boolean</td>
+    <td>control view status</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+   <tr>
+    <td>renderBackIcon</td>
+    <td>JSX</td>
+    <td>custom back icon</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+   <tr>
+    <td>renderFullScreenBackIcon</td>
+    <td>JSX</td>
+    <td>custom full's fullscreen icon</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+   <tr>
+    <td>renderMore</td>
+    <td>JSX</td>
+    <td>custom more icon</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+   <tr>
+    <td>renderFullScreen</td>
+    <td>JSX</td>
+    <td>custom fullscreen icon</td>
     <td>❌</td>
     <td>undefined</td>
   </tr>
