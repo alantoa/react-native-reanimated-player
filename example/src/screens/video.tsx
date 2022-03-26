@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
 import {
   BottomSheetBackdrop,
   BottomSheetModal,
@@ -91,7 +90,7 @@ export const VideoScreen = ({
 
   const { store, dispatch } = useContext(PlayerContext);
   const DISMISS_POINT = height - 45 - insets.bottom;
-  const SNAP_POINT = [0, height - 45 - VIDEO_MIN_HEIGHT - insets.bottom];
+  const SNAP_POINT = [0, height - 42 - VIDEO_MIN_HEIGHT - insets.bottom];
   const diasbled = Boolean(store.snapPoint > SNAP_POINT[0]);
   const paused = Boolean(store.paused || store.snapPoint === -1);
 
@@ -401,6 +400,9 @@ export const VideoScreen = ({
       }
     })
     .onEnd(({ velocityY, translationY }, success) => {
+      if (!panIsVertical.value) {
+        return;
+      }
       videoPlayerRef.current?.toggleControlViewOpacity(false);
 
       if (isFullScreen.value) {
@@ -411,7 +413,7 @@ export const VideoScreen = ({
         if (-translationY >= 40 && snapPointIndex.value === 0) {
           runOnJS(enterFullScreen)();
         }
-        const dragToss = 0.06;
+        const dragToss = 0.08;
         const endOffsetY =
           sheetTranslationY.value +
           panTranslationY.value +
@@ -492,14 +494,41 @@ export const VideoScreen = ({
           pageStyle,
         ]}>
         <GestureDetector gesture={panGesture}>
-          <Animated.View
-            style={[
-              {
-                flexDirection: 'row',
-                alignItems: 'flex-end',
-              },
-              getVideoContainerStyle,
-            ]}>
+          <Animated.View style={getVideoContainerStyle}>
+            <Animated.View style={[styles.videoThumbInfo, videoThumbInfo]}>
+              <View>
+                <Text
+                  tx={`${videoInfo.author} - ${videoInfo.title}`}
+                  numberOfLines={1}
+                  color={colors.text}
+                />
+                <Text
+                  tx={videoInfo.author}
+                  style={mt(0.5)}
+                  numberOfLines={1}
+                  t3
+                  color={palette.G4(1)}
+                />
+              </View>
+
+              <TouchableWithoutFeedback
+                onPress={() => {
+                  dispatch(setPlayerPaused(!paused));
+                }}>
+                <AnimatedLottieView
+                  animatedProps={playAnimatedProps}
+                  source={require('../assets/lottie-play.json')}
+                  style={styles.playIcon}
+                />
+              </TouchableWithoutFeedback>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  dispatch(setPlayerPoint(-1));
+                }}>
+                <Icon name="close-bold" size={30} color={colors.text} />
+              </TouchableOpacity>
+            </Animated.View>
             <VideoPlayer
               source={videoInfo.source}
               playWhenInactive
@@ -544,51 +573,6 @@ export const VideoScreen = ({
                 />
               )}
             />
-            <Animated.View
-              style={[
-                {
-                  marginBottom: 14,
-                  flex: 1,
-                  marginLeft: 12,
-                  marginRight: 20,
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                },
-                videoThumbInfo,
-              ]}>
-              <View>
-                <Text
-                  tx={`${videoInfo.author} - ${videoInfo.title}`}
-                  numberOfLines={1}
-                  color={colors.text}
-                />
-                <Text
-                  tx={videoInfo.author}
-                  style={{ marginTop: 2 }}
-                  numberOfLines={1}
-                  t3
-                  color={palette.G4(1)}
-                />
-              </View>
-
-              <TouchableWithoutFeedback
-                onPress={() => {
-                  dispatch(setPlayerPaused(!paused));
-                }}>
-                <AnimatedLottieView
-                  animatedProps={playAnimatedProps}
-                  source={require('../assets/lottie-play.json')}
-                  style={{ height: 30, width: 30 }}
-                />
-              </TouchableWithoutFeedback>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => {
-                  dispatch(setPlayerPoint(-1));
-                }}>
-                <Icon name="close-bold" size={30} color={colors.text} />
-              </TouchableOpacity>
-            </Animated.View>
           </Animated.View>
         </GestureDetector>
         <Animated.View
@@ -644,13 +628,11 @@ export const VideoScreen = ({
                   </Text>
                 </View>
               </View>
-              <View>
-                <Text
-                  tx={'SUBSCRIBED'}
-                  h5
-                  color={dark ? palette.G3(1) : palette.G5(1)}
-                />
-              </View>
+              <Text
+                tx={'SUBSCRIBED'}
+                h5
+                color={dark ? palette.G3(1) : palette.G5(1)}
+              />
             </View>
           </ScrollView>
           <BottomSheetModal
@@ -871,5 +853,19 @@ const styles = StyleSheet.create({
     marginTop: -sliderTranslateY,
     zIndex: -1,
     elevation: -1,
+  },
+  videoThumbInfo: {
+    marginBottom: 14,
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    position: 'absolute',
+    right: 20,
+    width: width - 160,
+    bottom: 4,
+  },
+  playIcon: {
+    height: 30,
+    width: 30,
   },
 });
