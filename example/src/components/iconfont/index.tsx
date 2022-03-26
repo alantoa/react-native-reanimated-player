@@ -4,8 +4,8 @@
 import React, { FunctionComponent } from 'react';
 import { ViewProps } from 'react-native';
 import { GProps } from 'react-native-svg';
+import IconCloseBold from './IconCloseBold';
 import IconAdd from './IconAdd';
-import IconRoundadd from './IconRoundadd';
 import IconYoutubeShorts from './IconYoutubeShorts';
 import IconSubscriptions from './IconSubscriptions';
 import IconVideoLibrary from './IconVideoLibrary';
@@ -15,8 +15,8 @@ import IconAIcChevrondown16 from './IconAIcChevrondown16';
 import IconFlagoutline from './IconFlagoutline';
 import IconSetting from './IconSetting';
 import IconFeedback from './IconFeedback';
+export { default as IconCloseBold } from './IconCloseBold';
 export { default as IconAdd } from './IconAdd';
-export { default as IconRoundadd } from './IconRoundadd';
 export { default as IconYoutubeShorts } from './IconYoutubeShorts';
 export { default as IconSubscriptions } from './IconSubscriptions';
 export { default as IconVideoLibrary } from './IconVideoLibrary';
@@ -27,7 +27,7 @@ export { default as IconFlagoutline } from './IconFlagoutline';
 export { default as IconSetting } from './IconSetting';
 export { default as IconFeedback } from './IconFeedback';
 
-export type IconNames = 'add' | 'roundadd' | 'youtube-shorts' | 'subscriptions' | 'video_library' | 'home' | 'close' | 'a-ic_chevrondown_16' | 'flagoutline' | 'setting' | 'feedback';
+export type IconNames = 'close-bold' | 'add' | 'youtube-shorts' | 'subscriptions' | 'video_library' | 'home' | 'close' | 'a-ic_chevrondown_16' | 'flagoutline' | 'setting' | 'feedback';
 
 interface Props extends GProps, ViewProps {
   name: IconNames;
@@ -37,10 +37,10 @@ interface Props extends GProps, ViewProps {
 
 let IconFont: FunctionComponent<Props> = ({ name, ...rest }) => {
   switch (name) {
+    case 'close-bold':
+      return <IconCloseBold key="1" {...rest} />;
     case 'add':
-      return <IconAdd key="1" {...rest} />;
-    case 'roundadd':
-      return <IconRoundadd key="2" {...rest} />;
+      return <IconAdd key="2" {...rest} />;
     case 'youtube-shorts':
       return <IconYoutubeShorts key="3" {...rest} />;
     case 'subscriptions':

@@ -6,15 +6,17 @@ import {
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
 import { useTheme } from '@react-navigation/native';
-import React, { useCallback, useContext, useRef, useState } from 'react';
+import LottieView from 'lottie-react-native';
+import React, { useCallback, useContext, useEffect, useRef } from 'react';
 import {
   Image,
   ImageStyle,
-  PixelRatio,
   ScrollView,
   StyleProp,
   StyleSheet,
   TouchableHighlight,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
   ViewStyle,
 } from 'react-native';
@@ -24,40 +26,34 @@ import InkWell from 'react-native-inkwell';
 import Animated, {
   interpolate,
   runOnJS,
+  useAnimatedProps,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import VideoPlayer, { VideoPlayerRef } from 'react-native-reanimated-player';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, ThemeView } from '../components';
 import { Icon } from '../components/icon';
 import type { IconNames } from '../components/iconfont';
-import { Context } from '../context';
+import { springConfig, videoInfo, VIDEO_MIN_HEIGHT } from '../constants';
+import { PlayerContext } from '../state/context';
+import { setPlayerPaused, setPlayerPoint } from '../state/reducer';
 import { palette } from '../theme/palette';
 import { height, width } from '../utils';
-import { mb, mr, mt } from '../utils/ui-tools';
-const springConfig = {
-  mass: 0.5,
-  overshootClamping: true,
-};
+import { mb, mr, mt, px2dp } from '../utils/ui-tools';
 
-const px2dp = (px: number) => PixelRatio.roundToNearestPixel(px);
+const AnimatedLottieView = Animated.createAnimatedComponent(LottieView);
+
 const sliderTranslateY = 6;
 const VIDEO_DEFAULT_HEIGHT = width * (9 / 16);
-const videoInfo = {
-  title: 'Bad Guy',
-  album: 'When We All Fall Asleep, Where Do We Go?',
-  author: 'Billie Eilish',
-  avatar: require('../assets/avatar.jpeg'),
-  source: require('../assets/video-demo.mp4'),
-  desc: 'A react native video player components demo, this is desc',
-  createTime: '2 years ago',
-};
 const flexRow: ViewStyle = {
   flexDirection: 'row',
   alignItems: 'center',
 };
+
 const Avatar = ({
   size,
   style,
@@ -85,18 +81,20 @@ const options: { icon: IconNames; title: string }[] = [
   },
 ];
 
-const VIDEO_SCALE_HEIGHT = 120;
-
-export const VideoScreen = () => {
-  const [paused, setPaused] = useState(true);
+export const VideoScreen = ({
+  videoTranslateY,
+}: {
+  videoTranslateY: Animated.SharedValue<number>;
+}) => {
   const insets = useSafeAreaInsets();
-  const SNAP_POINT = [
-    0,
-    height - 45 - VIDEO_SCALE_HEIGHT - insets.bottom,
-    height - 45 - insets.bottom,
-  ];
-  const [snapPoint, setSnapPoint] = useState(SNAP_POINT[0]);
-  const diasbled = Boolean(snapPoint > SNAP_POINT[0]);
+  const insetsRefs = useRef(insets);
+
+  const { store, dispatch } = useContext(PlayerContext);
+  const DISMISS_POINT = height - 45 - insets.bottom;
+  const SNAP_POINT = [0, height - 45 - VIDEO_MIN_HEIGHT - insets.bottom];
+  const diasbled = Boolean(store.snapPoint > SNAP_POINT[0]);
+  const paused = Boolean(store.paused || store.snapPoint === -1);
+
   const { colors, dark } = useTheme();
   const descModalRef = useRef<BottomSheetModal>(null);
   const optionsModalRef = useRef<BottomSheetModal>(null);
@@ -106,16 +104,19 @@ export const VideoScreen = () => {
   const isOpened = useRef(false);
   const isTapPaused = useRef(paused);
   const sheetPrevIndex = useRef(-1);
+
   const indexValue = useSharedValue(0);
   const sheetTranslationY = useSharedValue(0);
   const panTranslationY = useSharedValue(0);
+  const videoScale = useSharedValue(1);
+  const videoTransY = useSharedValue(0);
+
   const videoPlayerRef = useRef<VideoPlayerRef>(null);
   const videoHeight = useSharedValue(VIDEO_DEFAULT_HEIGHT);
   const videoWidth = useSharedValue(width);
   const isFullScreen = useSharedValue(false);
   const panIsVertical = useSharedValue(false);
-
-  const { videoTranslateY } = useContext(Context);
+  const snapPointIndex = useSharedValue(store.snapPoint);
 
   const pageStyle = useAnimatedStyle(() => {
     const y = panTranslationY.value + sheetTranslationY.value;
@@ -133,7 +134,7 @@ export const VideoScreen = () => {
     const y = panTranslationY.value + sheetTranslationY.value;
     return {
       backgroundColor: isFullScreen.value ? '#000' : colors.background,
-      opacity: interpolate(y, [SNAP_POINT[1], SNAP_POINT[2]], [1, 0]),
+      opacity: interpolate(y, [SNAP_POINT[1], DISMISS_POINT], [1, 0]),
     };
   }, [panTranslationY, sheetTranslationY]);
 
@@ -144,19 +145,26 @@ export const VideoScreen = () => {
 
     let targetWidth = videoWidth.value;
 
-    if (targetHeight < VIDEO_SCALE_HEIGHT) {
+    if (targetHeight < VIDEO_MIN_HEIGHT) {
       const widthScale = clamp((height - y) / y, 0, 1);
       targetWidth = videoWidth.value * widthScale;
     }
-    if (isFullScreen.value) {
-      return {
-        height: width,
-        width: height - insets.left - insets.right,
-      };
-    }
+
     return {
-      height: clamp(targetHeight, 67.5, VIDEO_DEFAULT_HEIGHT),
-      width: clamp(targetWidth, 120, width),
+      transform: [
+        {
+          scale: videoScale.value,
+        },
+        {
+          translateY: videoTransY.value,
+        },
+      ],
+      height: isFullScreen.value
+        ? width
+        : clamp(targetHeight, 67.5, VIDEO_DEFAULT_HEIGHT),
+      width: isFullScreen.value
+        ? height - insetsRefs.current?.top - insetsRefs.current?.bottom
+        : clamp(targetWidth, 120, width),
     };
   }, [panTranslationY, sheetTranslationY]);
 
@@ -177,7 +185,7 @@ export const VideoScreen = () => {
     return {
       opacity: interpolate(
         y,
-        [VIDEO_SCALE_HEIGHT, height - VIDEO_DEFAULT_HEIGHT],
+        [VIDEO_MIN_HEIGHT, height - VIDEO_DEFAULT_HEIGHT],
         [0, 1],
       ),
     };
@@ -196,13 +204,49 @@ export const VideoScreen = () => {
 
     const opacity = interpolate(
       y,
-      [VIDEO_DEFAULT_HEIGHT + VIDEO_SCALE_HEIGHT, height - VIDEO_SCALE_HEIGHT],
+      [VIDEO_DEFAULT_HEIGHT + VIDEO_MIN_HEIGHT, height - VIDEO_MIN_HEIGHT],
       [0, 1],
     );
     return {
       opacity: isFullScreen.value ? 0 : opacity,
     };
   });
+  const playAnimated = useDerivedValue(() => {
+    return paused ? 0.5 : 0;
+  }, [paused]);
+  const playAnimatedProps = useAnimatedProps(() => {
+    return {
+      progress: withTiming(playAnimated.value),
+    };
+  });
+
+  const translationBySnapPointIndex = useCallback(
+    (snapIndex: number) => {
+      'worklet';
+      snapPointIndex.value = snapIndex;
+
+      switch (snapIndex) {
+        case -1:
+          sheetTranslationY.value = videoTranslateY.value = withSpring(
+            DISMISS_POINT,
+            springConfig,
+          );
+          break;
+        default:
+          sheetTranslationY.value = videoTranslateY.value = withSpring(
+            SNAP_POINT[snapIndex],
+            springConfig,
+          );
+          break;
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [DISMISS_POINT, SNAP_POINT],
+  );
+
+  useEffect(() => {
+    translationBySnapPointIndex(store.snapPoint);
+  }, [store.snapPoint, translationBySnapPointIndex]);
 
   const openModal = () => {
     descModalRef.current?.present();
@@ -281,7 +325,6 @@ export const VideoScreen = () => {
         break;
       default:
         isOpened.current = false;
-
         break;
     }
     sheetPrevIndex.current = index;
@@ -302,29 +345,34 @@ export const VideoScreen = () => {
       </View>
     </ThemeView>
   );
-  const renderBubble = useCallback(
-    () => (
+  const renderBubble = useCallback(() => {
+    return (
       <Image
         source={require('../assets/snapshot.png')}
         style={styles.snapshot}
       />
-    ),
-    [],
-  );
-  const seek = () => {
-    videoPlayerRef.current?.setSeekTo(100);
-  };
+    );
+  }, []);
 
   /**
    * on pan event
    */
   const onHandlerEndOnJS = (point: number) => {
-    setSnapPoint(point);
+    dispatch(setPlayerPoint(point));
   };
   const onStartOnJS = () => {
-    seek();
     videoPlayerRef.current?.toggleControlViewOpacity(false);
     closeDescModal();
+  };
+  /**
+   * Toggle player full screen state on <Video> component
+   */
+  const enterFullScreen = () => {
+    videoPlayerRef.current?.toggleFullSreen(true);
+  };
+
+  const exitFullScreen = () => {
+    videoPlayerRef.current?.toggleFullSreen(false);
   };
   const panGesture = Gesture.Pan()
     .onStart(({ velocityY, velocityX }) => {
@@ -336,51 +384,92 @@ export const VideoScreen = () => {
         return;
       }
       if (isFullScreen.value) {
-        return;
-      }
-      panTranslationY.value = translationY;
-      videoTranslateY.value = sheetTranslationY.value + translationY;
-    })
-    .onEnd(({ velocityY }, success) => {
-      videoPlayerRef.current?.toggleControlViewOpacity(false);
-      const dragToss = 0.06;
-      const endOffsetY =
-        sheetTranslationY.value + panTranslationY.value + velocityY * dragToss;
-
-      if (
-        !success &&
-        endOffsetY < SNAP_POINT[SNAP_POINT.length - 1] &&
-        snapPoint < endOffsetY
-      ) {
-        return;
-      }
-
-      let destSnapPoint = SNAP_POINT[0];
-      for (const point of SNAP_POINT) {
-        const distFromSnap = Math.abs(point - endOffsetY);
-        if (distFromSnap < Math.abs(destSnapPoint - endOffsetY)) {
-          console.log(point);
-
-          destSnapPoint = point;
+        if (translationY > 0 && Math.abs(translationY) < 100) {
+          videoScale.value = clamp(0.9, 1 - Math.abs(translationY) * 0.008, 1);
+          videoTransY.value = translationY;
         }
+      } else {
+        if (
+          translationY < 0 &&
+          Math.abs(translationY) < 40 &&
+          snapPointIndex.value === 0
+        ) {
+          videoScale.value = Math.abs(translationY) * 0.012 + 1;
+        }
+        panTranslationY.value = translationY;
+        videoTranslateY.value = sheetTranslationY.value + translationY;
       }
-      const finalSheetValue = sheetTranslationY.value + panTranslationY.value;
-      sheetTranslationY.value = finalSheetValue;
-      panTranslationY.value = 0;
-      if (videoTranslateY) {
-        videoTranslateY.value = finalSheetValue;
-        videoTranslateY.value = withSpring(destSnapPoint, springConfig);
-      }
+    })
+    .onEnd(({ velocityY, translationY }, success) => {
+      videoPlayerRef.current?.toggleControlViewOpacity(false);
 
-      sheetTranslationY.value = withSpring(destSnapPoint, springConfig);
-      runOnJS(onHandlerEndOnJS)(destSnapPoint);
+      if (isFullScreen.value) {
+        if (translationY >= 100) {
+          runOnJS(exitFullScreen)();
+        }
+      } else {
+        if (-translationY >= 40 && snapPointIndex.value === 0) {
+          runOnJS(enterFullScreen)();
+        }
+        const dragToss = 0.06;
+        const endOffsetY =
+          sheetTranslationY.value +
+          panTranslationY.value +
+          velocityY * dragToss;
+
+        if (
+          !success &&
+          endOffsetY < SNAP_POINT[SNAP_POINT.length - 1] &&
+          store.snapPoint < endOffsetY
+        ) {
+          return;
+        }
+        let destSnapPoint = SNAP_POINT[0];
+        let pointIndex = 0;
+
+        if (snapPointIndex.value === 1 && translationY > 0) {
+          const y =
+            sheetTranslationY.value + panTranslationY.value + velocityY * 0.001;
+          if (y > DISMISS_POINT - VIDEO_MIN_HEIGHT / 2) {
+            destSnapPoint = DISMISS_POINT;
+            pointIndex = -1;
+          } else {
+            destSnapPoint = SNAP_POINT[1];
+            pointIndex = 1;
+          }
+        } else {
+          pointIndex = SNAP_POINT.findIndex(point => {
+            const distFromSnap = Math.abs(point - endOffsetY);
+            return distFromSnap < Math.abs(destSnapPoint - endOffsetY);
+          });
+
+          if (pointIndex > -1) {
+            destSnapPoint = SNAP_POINT[pointIndex];
+          } else {
+            pointIndex = 0;
+          }
+        }
+
+        snapPointIndex.value = pointIndex;
+
+        const finalSheetValue = sheetTranslationY.value + panTranslationY.value;
+        panTranslationY.value = 0;
+
+        sheetTranslationY.value = videoTranslateY.value = finalSheetValue;
+        sheetTranslationY.value = videoTranslateY.value = withSpring(
+          destSnapPoint,
+          springConfig,
+        );
+        runOnJS(onHandlerEndOnJS)(pointIndex);
+      }
+      videoTransY.value = 0;
+      videoScale.value = withTiming(1);
     });
 
   const foldVideo = () => {
     videoPlayerRef.current?.toggleControlViewOpacity(false);
-    const destSnapPoint = SNAP_POINT[SNAP_POINT.length - 1];
-    sheetTranslationY.value = withSpring(destSnapPoint, springConfig);
-    setSnapPoint(destSnapPoint);
+    translationBySnapPointIndex(1);
+    dispatch(setPlayerPoint(1));
   };
   return (
     <BottomSheetModalProvider>
@@ -420,7 +509,7 @@ export const VideoScreen = () => {
               onTapBack={foldVideo}
               paused={paused}
               onPausedChange={state => {
-                setPaused(state);
+                dispatch(setPlayerPaused(state));
               }}
               onTapPause={state => {
                 isTapPaused.current = state;
@@ -457,21 +546,48 @@ export const VideoScreen = () => {
             />
             <Animated.View
               style={[
-                { marginBottom: 14, flex: 1, marginLeft: 12, marginRight: 20 },
+                {
+                  marginBottom: 14,
+                  flex: 1,
+                  marginLeft: 12,
+                  marginRight: 20,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                },
                 videoThumbInfo,
               ]}>
-              <Text
-                tx={`${videoInfo.author} - ${videoInfo.title}`}
-                numberOfLines={1}
-                color={colors.text}
-              />
-              <Text
-                tx={videoInfo.author}
-                style={{ marginTop: 2 }}
-                numberOfLines={1}
-                t3
-                color={palette.G4(1)}
-              />
+              <View>
+                <Text
+                  tx={`${videoInfo.author} - ${videoInfo.title}`}
+                  numberOfLines={1}
+                  color={colors.text}
+                />
+                <Text
+                  tx={videoInfo.author}
+                  style={{ marginTop: 2 }}
+                  numberOfLines={1}
+                  t3
+                  color={palette.G4(1)}
+                />
+              </View>
+
+              <TouchableWithoutFeedback
+                onPress={() => {
+                  dispatch(setPlayerPaused(!paused));
+                }}>
+                <AnimatedLottieView
+                  animatedProps={playAnimatedProps}
+                  source={require('../assets/lottie-play.json')}
+                  style={{ height: 30, width: 30 }}
+                />
+              </TouchableWithoutFeedback>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  dispatch(setPlayerPoint(-1));
+                }}>
+                <Icon name="close-bold" size={30} color={colors.text} />
+              </TouchableOpacity>
             </Animated.View>
           </Animated.View>
         </GestureDetector>
@@ -620,7 +736,7 @@ export const VideoScreen = () => {
             </BottomSheetScrollView>
           </BottomSheetModal>
           <Animated.View
-            pointerEvents={snapPoint === SNAP_POINT[0] ? 'none' : 'auto'}
+            pointerEvents={store.snapPoint === SNAP_POINT[0] ? 'none' : 'auto'}
             style={[
               styles.backdrop,
               { backgroundColor: colors.background },
@@ -701,6 +817,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 8,
+    justifyContent: 'center',
+    minHeight: 60,
   },
   view: {
     backgroundColor: palette.B(1),

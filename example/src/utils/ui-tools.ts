@@ -1,3 +1,5 @@
+import { PixelRatio } from 'react-native';
+
 export const ml = (multiple = 1) => {
   return {
     marginLeft: 4 * multiple,
@@ -19,3 +21,4 @@ export const mb = (multiple = 1) => {
     marginBottom: 4 * multiple,
   };
 };
+export const px2dp = (px: number) => PixelRatio.roundToNearestPixel(px);

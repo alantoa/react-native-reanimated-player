@@ -4,7 +4,7 @@ import {
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import { useTheme } from '@react-navigation/native';
-import React, { useContext } from 'react';
+import React from 'react';
 import type { TextStyle, ViewStyle } from 'react-native';
 import { TouchableOpacity, View } from 'react-native';
 import { clamp } from 'react-native-awesome-slider/src/utils';
@@ -17,7 +17,7 @@ import { palette } from '../../src/theme/palette';
 import { height, width } from '../../src/utils';
 import { Text } from '../components';
 import { Icon } from '../components/icon';
-import { Context } from '../context';
+import { VIDEO_MIN_HEIGHT } from '../constants';
 import { Example } from '../screens';
 
 export type RootParamList = {
@@ -56,27 +56,34 @@ const BOTTOM_TAB: ViewStyle = {
 };
 const BOTTOM_TEXT: TextStyle = { marginTop: 2 };
 const BOTTOM_TAB_HEIGHT = 48.5;
-const BottomTabNavigator = () => {
+const BottomTabNavigator = ({
+  videoTranslateY,
+}: {
+  videoTranslateY: Animated.SharedValue<number>;
+}) => {
   const { colors } = useTheme();
-
   const insets = useSafeAreaInsets();
-  const { videoTranslateY } = useContext(Context);
 
   const getBottomtabStyle = useAnimatedStyle(() => {
     const translateY = interpolate(
       videoTranslateY.value,
-      [0, height - insets.bottom - BOTTOM_TAB_HEIGHT - 120],
-      [insets.bottom + BOTTOM_TAB_HEIGHT, 0],
+      [0, height - BOTTOM_TAB_HEIGHT - VIDEO_MIN_HEIGHT - insets.bottom],
+      [BOTTOM_TAB_HEIGHT + 44, 0],
     );
-
+    const opacity = interpolate(
+      videoTranslateY.value,
+      [0, height - BOTTOM_TAB_HEIGHT - VIDEO_MIN_HEIGHT - insets.bottom],
+      [0, 1],
+    );
     return {
       transform: [
         {
           translateY: clamp(translateY, 0, 80),
         },
       ],
+      opacity,
     };
-  });
+  }, [videoTranslateY]);
 
   const renderTabBar = ({
     state,

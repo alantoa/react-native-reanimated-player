@@ -30,6 +30,7 @@ import Animated, {
   runOnJS,
   useAnimatedProps,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withDelay,
   withTiming,
@@ -99,10 +100,25 @@ export type VideoProps = VideoProperties & {
   renderFullScreen?: () => JSX.Element;
 };
 export type VideoPlayerRef = {
+  /**
+   * Check control view to see if it is displayed before playing
+   */
   setPlay: () => void;
+  /**
+   * Check control view to see if it is displayed before pause
+   */
   setPause: () => void;
+  /**
+   * toggle full screen
+   */
   toggleFullSreen: (isFullScreen: boolean) => void;
+  /**
+   * toggle control opatity
+   */
   toggleControlViewOpacity: (isShow: boolean) => void;
+  /**
+   * seek to progress
+   */
   setSeekTo: (second: number) => void;
 };
 
@@ -170,10 +186,12 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
 
     useImperativeHandle(ref, () => ({
       setPlay: () => {
+        'worklet';
         checkTapTakesEffect();
         play();
       },
       setPause: () => {
+        'worklet';
         checkTapTakesEffect();
         pause();
       },
@@ -203,13 +221,11 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
      */
     const isLoadEnd = useSharedValue(false);
 
-    const backdropOpacity = useSharedValue(0);
     const controlViewOpacity = useSharedValue(showOnStart ? 1 : 0);
 
     const autoPlayTextAnimation = useSharedValue(0);
     const doubleLeftOpacity = useSharedValue(0);
     const doubleRightOpacity = useSharedValue(0);
-    const playAnimated = useSharedValue(0);
 
     const videoScale = useSharedValue(1);
     const videoTransY = useSharedValue(0);
@@ -279,12 +295,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
         opacity: controlViewOpacity.value,
       };
     });
-    const backdropStyles = useAnimatedStyle(() => {
-      return {
-        opacity: backdropOpacity.value,
-        marginTop: videoHeight.value + insets.top,
-      };
-    });
+
     const autoPlayTextStyle = useAnimatedStyle(() => {
       return {
         opacity: autoPlayTextAnimation.value,
@@ -305,6 +316,10 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     /**
      * useAnimatedProps
      */
+    const playAnimated = useDerivedValue(() => {
+      return paused ? 0.5 : 0;
+    }, [paused]);
+
     const playAnimatedProps = useAnimatedProps(() => {
       return {
         progress: withTiming(playAnimated.value),
@@ -419,7 +434,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     const enterFullScreen = () => {
       onEnterFullscreen?.();
       StatusBar.setHidden(true, 'fade');
-      backdropOpacity.value = 1;
       Orientation.lockToLandscape();
       isFullScreen.value = true;
       videoHeight.value = width;
@@ -431,7 +445,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       Orientation.lockToPortrait();
       isFullScreen.value = false;
       videoHeight.value = videoDefaultHeight;
-      backdropOpacity.value = 0;
     };
     const toggleFullScreenOnJS = () => {
       Orientation.getOrientation(orientation => {
@@ -712,7 +725,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
      */
     const play = () => {
       onPausedChange(false);
-      playAnimated.value = 0;
     };
 
     /**
@@ -720,7 +732,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
      */
     const pause = () => {
       onPausedChange(true);
-      playAnimated.value = 0.5;
     };
     /**
      * on toggle auto play mode
@@ -1057,10 +1068,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
             )}
           </Animated.View>
         </GestureDetector>
-        <Animated.View
-          style={[styles.backdrop, backdropStyles]}
-          pointerEvents={'none'}
-        />
       </>
     );
   },
@@ -1069,12 +1076,6 @@ VideoPlayer.displayName = 'VideoPlayer';
 export default VideoPlayer;
 
 const styles = StyleSheet.create({
-  backdrop: {
-    backgroundColor: '#000',
-    flex: 1,
-    zIndex: 1,
-    ...StyleSheet.absoluteFillObject,
-  },
   controlView: {
     backgroundColor: 'rgba(0,0,0,.6)',
     justifyContent: 'center',

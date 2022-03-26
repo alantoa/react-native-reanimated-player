@@ -1,5 +1,6 @@
-import type Animated from 'react-native-reanimated';
+import type React from 'react';
 
 export type ContextType = {
-  videoTranslateY: Animated.SharedValue<number>;
+  point: number;
 };
+export type SetContextType = React.Dispatch<React.SetStateAction<ContextType>>;
