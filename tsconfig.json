@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "react-native-video-player": ["./src/index"]
+      "react-native-reanimated-player": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

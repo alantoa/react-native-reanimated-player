@@ -49,6 +49,7 @@
   },
   "homepage": "https://github.com/MonsterAnan/react-native-video-player",
   "dependencies": {
+    "@gorhom/portal": "^1.0.12",
     "lodash.padstart": "^4.6.1"
   },
   "devDependencies": {
@@ -70,9 +71,9 @@
     "lottie-react-native": "^5.0.1",
     "metro-react-native-babel-preset": "^0.66.2",
     "react-native": "0.66.4",
-    "react-native-awesome-slider": "^1.4.0",
+    "react-native-awesome-slider": "^2.0.1",
     "react-native-builder-bob": "^0.18.2",
-    "react-native-gesture-handler": "1.10.3",
+    "react-native-gesture-handler": "^2.3.2",
     "react-native-orientation-locker": "*",
     "react-native-reanimated": "2.1.0",
     "react-native-safe-area-context": "^3.3.2",
@@ -82,16 +83,15 @@
     "typescript": "^4.4.4"
   },
   "peerDependencies": {
-    "@react-navigation/core": "*",
-    "lottie-react-native": "*",
+    "lottie-react-native": ">=4.0.0",
     "react": "*",
     "react-native": "*",
-    "react-native-awesome-slider": "*",
-    "react-native-gesture-handler": "*",
+    "react-native-awesome-slider": ">=2.0.0",
+    "react-native-gesture-handler": ">=2.0.0",
     "react-native-orientation-locker": "*",
-    "react-native-reanimated": ">2",
+    "react-native-reanimated": ">=2.0.0",
     "react-native-safe-area-context": "*",
-    "react-native-video": "*"
+    "@react-navigation/core": "*"
   },
   "jest": {
     "preset": "react-native",

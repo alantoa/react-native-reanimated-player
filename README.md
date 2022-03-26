@@ -4,7 +4,6 @@
   <h3 align="center">100% written in Typescript video player component, interaction is like Youtube player.</h3>
 </div>
 
-
 <div align="center">
   <img src="./assets/example.gif" width="30%" />
   <br/> 
@@ -13,8 +12,9 @@
 ## Installation
 
 First you have to follow installation instructions of:
-- [react-native-awesome-slider](https://github.com/alantoa/react-native-awesome-slider/) 
-- [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/) 
+
+- [react-native-awesome-slider](https://github.com/alantoa/react-native-awesome-slider/)
+- [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/)
 - [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/)
 - [react-native-orientation-locker](https://github.com/wonday/react-native-orientation-locker/)
 - [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)
@@ -24,28 +24,27 @@ First you have to follow installation instructions of:
 yarn add react-native-reanimated-player
 ```
 
-
 ## Example usage
 
 ```jsx
 import VideoPlayer from 'react-native-reanimated-player';
 
 export const Example = () => {
-    return (
-        <VideoPlayer
-          source={uri}
-          headerTitle={'Title in full screen mode'}
-          onTapBack={() => {
-            Alert.alert('onTapBack');
-          }}
-          onTapMore={() => {
-            Alert.alert('onTapMore');
-          }}
-          onToggleAutoPlay={(state: boolean) => {
-            console.log(`onToggleAutoPlay state: ${state}`);
-          }}
-        />
-    );
+  return (
+    <VideoPlayer
+      source={uri}
+      headerTitle={'Title in full screen mode'}
+      onTapBack={() => {
+        Alert.alert('onTapBack');
+      }}
+      onTapMore={() => {
+        Alert.alert('onTapMore');
+      }}
+      onToggleAutoPlay={(state: boolean) => {
+        console.log(`onToggleAutoPlay state: ${state}`);
+      }}
+    />
+  );
 };
 ```
 
@@ -58,10 +57,12 @@ export const Example = () => {
 - ...
 
 ## TODO list
+
 - Add more custom props
 - Add Previous & Next button
 - Rewrite the gesture section with react-native-gusture-handle V2
 - ...and more
+
 ## Configuration
 
 The `<VideoPlayer/>` component has the following configuration properties:
@@ -199,27 +200,4 @@ The `<VideoPlayer/>` component has the following configuration properties:
     <td>❌</td>
     <td>undefined</td>
   </tr>
-  <tr>
-    <td>onPanStartEvent</td>
-    <td>function</td>
-    <td>on pan start play event callback</td>
-    <td>❌</td>
-    <td>undefined</td>
-  </tr>
-  <tr>
-    <td>onPanEvent</td>
-    <td>function</td>
-    <td>on pan play event callback</td>
-    <td>❌</td>
-    <td>undefined</td>
-  </tr>
-  <tr>
-    <td>onPanEndEvent</td>
-    <td>function</td>
-    <td>on pan end play event callback</td>
-    <td>❌</td>
-    <td>undefined</td>
-  </tr>
 </table>
-
-

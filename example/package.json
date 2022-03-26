@@ -7,24 +7,30 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "icon": "npx iconfont-rn",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix"
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^4",
+    "@gorhom/portal": "^1.0.12",
+    "@react-navigation/bottom-tabs": "^6.2.0",
     "@react-navigation/native": "^6.0.6",
     "@react-navigation/native-stack": "^6.2.5",
     "babel-plugin-module-resolver": "^4.1.0",
     "lottie-react-native": "^5.0.1",
     "react": "17.0.2",
     "react-native": "^0.67.3",
-    "react-native-awesome-slider": "^1.4.0",
-    "react-native-gesture-handler": "1.10.3",
+    "react-native-awesome-slider": "^2.0.1",
+    "react-native-gesture-handler": "^2.3.2",
+    "react-native-inkwell": "^0.4.5",
+    "react-native-lottie-tabbar": "^0.1.3",
     "react-native-orientation-locker": "^1.4.0",
     "react-native-reanimated": "^2.3.1",
     "react-native-redash": "^16.2.3",
-    "react-native-safe-area-context": "^3.3.2",
+    "react-native-safe-area-context": "^4.2.2",
     "react-native-screens": "^3.10.1",
-    "react-native-svg": "^12.1.1",
+    "react-native-svg": "^12.3.0",
     "react-native-video": "*"
   },
   "devDependencies": {
@@ -39,17 +45,16 @@
     "babel-jest": "^26.6.3",
     "eslint": "^7.14.0",
     "jest": "^26.6.3",
-    "metro-react-native-babel-preset": "^0.66.2",
-    "react-test-renderer": "17.0.2",
-    "typescript": "^4.4.4"
-  },
-  "peerDependencies": {
     "lottie-react-native": "*",
+    "metro-react-native-babel-preset": "^0.66.2",
     "react-native-awesome-slider": "^0.1.14",
     "react-native-gesture-handler": "1.10.3",
-    "react-native-reanimated": ">2",
+    "react-native-iconfont-cli": "^2.2.4",
+    "react-native-reanimated": ">=2.0.0",
     "react-native-redash": "^16",
-    "react-native-video": "*"
+    "react-native-video": "*",
+    "react-test-renderer": "17.0.2",
+    "typescript": "^4.4.4"
   },
   "resolutions": {
     "@types/react": "^17"
