@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated-player",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A react-native video player that interacts like Youtube player, built upon Reanimted v2 & react-native-gesture-handle",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
