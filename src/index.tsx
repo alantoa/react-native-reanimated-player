@@ -94,7 +94,6 @@ export type VideoProps = VideoProperties & {
   disableControl?: boolean;
   renderBackIcon?: () => JSX.Element;
   renderFullScreenBackIcon?: () => JSX.Element;
-
   renderMore?: () => JSX.Element;
   renderFullScreen?: () => JSX.Element;
 };
