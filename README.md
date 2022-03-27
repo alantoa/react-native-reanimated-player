@@ -4,7 +4,6 @@
   <h3 align="center">100% written in Typescript video player component, interaction is like Youtube player.</h3>
 </div>
 
-
 <div align="center">
   <img src="./assets/example.gif" width="30%" />
   <br/> 
@@ -13,17 +12,16 @@
 ## Installation
 
 First you have to follow installation instructions of:
-- [react-native-awesome-slider](https://github.com/alantoa/react-native-awesome-slider/) 
-- [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/) 
+
+- [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/)
 - [react-native-gesture-handler](https://docs.swmansion.com/react-native-gesture-handler/)
 - [react-native-orientation-locker](https://github.com/wonday/react-native-orientation-locker/)
 - [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)
 - [react-native-video](https://github.com/react-native-video/react-native-video)
 
 ```sh
-yarn add react-native-reanimated-player
+yarn add react-native-reanimated-player@1
 ```
-
 
 ## Example usage
 
@@ -31,21 +29,21 @@ yarn add react-native-reanimated-player
 import VideoPlayer from 'react-native-reanimated-player';
 
 export const Example = () => {
-    return (
-        <VideoPlayer
-          source={uri}
-          headerTitle={'Title in full screen mode'}
-          onTapBack={() => {
-            Alert.alert('onTapBack');
-          }}
-          onTapMore={() => {
-            Alert.alert('onTapMore');
-          }}
-          onToggleAutoPlay={(state: boolean) => {
-            console.log(`onToggleAutoPlay state: ${state}`);
-          }}
-        />
-    );
+  return (
+    <VideoPlayer
+      source={uri}
+      headerTitle={'Title in full screen mode'}
+      onTapBack={() => {
+        Alert.alert('onTapBack');
+      }}
+      onTapMore={() => {
+        Alert.alert('onTapMore');
+      }}
+      onToggleAutoPlay={(state: boolean) => {
+        console.log(`onToggleAutoPlay state: ${state}`);
+      }}
+    />
+  );
 };
 ```
 
@@ -58,10 +56,12 @@ export const Example = () => {
 - ...
 
 ## TODO list
+
 - Add more custom props
 - Add Previous & Next button
 - Rewrite the gesture section with react-native-gusture-handle V2
 - ...and more
+
 ## Configuration
 
 The `<VideoPlayer/>` component has the following configuration properties:
@@ -221,5 +221,3 @@ The `<VideoPlayer/>` component has the following configuration properties:
     <td>undefined</td>
   </tr>
 </table>
-
-
