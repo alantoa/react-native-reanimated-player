@@ -23,13 +23,13 @@ First you have to follow installation instructions of:
 If `react-native-gesture-handler` version >= 2:
 
 ```sh
-yarn add react-native-reanimated-player@1
+yarn add react-native-reanimated-player@2
 ```
 
 else use v1:
 
 ```sh
-yarn add react-native-reanimated-player@0
+yarn add react-native-reanimated-player@1
 ```
 
 ## Example usage
