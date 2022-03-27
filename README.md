@@ -80,6 +80,7 @@ export const Example = () => {
 - Add more custom props
 - Add Previous & Next button
 - ~Rewrite the gesture section with react-native-gusture-handle V2~
+- Add `expo-av` support
 - ...and more
 
 ## Configuration
