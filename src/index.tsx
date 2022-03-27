@@ -85,6 +85,7 @@ export type VideoProps = VideoProperties & {
     | 'bubbleWidth'
     | 'bubbleTranslateY'
     | 'disable'
+    | 'panHitSlop'
   >;
   videoHeight: Animated.SharedValue<number>;
   customAnimationStyle?: Animated.AnimateStyle<ViewStyle>;
@@ -94,7 +95,6 @@ export type VideoProps = VideoProperties & {
   disableControl?: boolean;
   renderBackIcon?: () => JSX.Element;
   renderFullScreenBackIcon?: () => JSX.Element;
-
   renderMore?: () => JSX.Element;
   renderFullScreen?: () => JSX.Element;
 };

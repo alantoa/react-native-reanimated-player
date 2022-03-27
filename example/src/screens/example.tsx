@@ -1,7 +1,8 @@
 /* eslint-disable react-native/no-inline-styles */
 import { useTheme } from '@react-navigation/native';
 import React, { useContext } from 'react';
-import { Image, ScrollView, TouchableHighlight, View } from 'react-native';
+import { ScrollView, TouchableHighlight, View } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../components';
 import { videos } from '../constants';
@@ -9,6 +10,7 @@ import { PlayerContext } from '../state/context';
 import { setPlayerPoint } from '../state/reducer';
 import { palette } from '../theme/palette';
 import { width } from '../utils';
+
 export const Example = () => {
   const { colors, dark } = useTheme();
   const insets = useSafeAreaInsets();
@@ -31,8 +33,10 @@ export const Example = () => {
             underlayColor={dark ? 'rgba(0,0,0,.2)' : 'rgba(255,255,255,.2)'}
             key={`${i}`}>
             <View style={{ paddingBottom: 12 }}>
-              <Image
-                source={{ uri: item.cover }}
+              <FastImage
+                source={{
+                  uri: item.cover,
+                }}
                 style={{ width, height: (width * 9) / 16 }}
               />
               <View
@@ -42,7 +46,7 @@ export const Example = () => {
                   flexDirection: 'row',
                   alignItems: 'center',
                 }}>
-                <Image
+                <FastImage
                   source={{ uri: item.avatar }}
                   style={{
                     width: 40,
@@ -50,6 +54,7 @@ export const Example = () => {
                     borderRadius: 40,
                     marginRight: 8,
                   }}
+                  resizeMode="stretch"
                 />
                 <View style={{ flex: 1 }}>
                   <Text

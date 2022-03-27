@@ -7,13 +7,13 @@
 <div align="center">
   <img src="./assets/example.gif" width="30%" />
   <br/> 
+ <p><a href="https://twitter.com/alan_toa/status/1507732889181786118" >🔗 Watch example video</a></p>
 </div>
 
 ## Installation
 
 First you have to follow installation instructions of:
 
-- [react-native-awesome-slider](https://github.com/alantoa/react-native-awesome-slider/)
 - [react-native-reanimated](https://docs.swmansion.com/react-native-reanimated/)
 - [react-native-gesture-handler v2 or v1](https://docs.swmansion.com/react-native-gesture-handler/)
 - [react-native-orientation-locker](https://github.com/wonday/react-native-orientation-locker/)
@@ -23,21 +23,25 @@ First you have to follow installation instructions of:
 If `react-native-gesture-handler` version >= 2:
 
 ```sh
-yarn add react-native-reanimated-player
+yarn add react-native-reanimated-player@1
 ```
 
 else use v1:
 
 ```sh
-yarn add react-native-reanimated-player@1
+yarn add react-native-reanimated-player@0
 ```
 
 ## Example usage
 
 ```jsx
 import VideoPlayer from 'react-native-reanimated-player';
-
+import { useSharedValue } from 'react-native-reanimated';
 export const Example = () => {
+  const videoHeight = useSharedValue(0);
+  const isFullScreen = useSharedValue(false);
+  const { paused, setPaused } = useContext(false);
+
   return (
     <VideoPlayer
       source={uri}
@@ -48,9 +52,13 @@ export const Example = () => {
       onTapMore={() => {
         Alert.alert('onTapMore');
       }}
-      onToggleAutoPlay={(state: boolean) => {
-        console.log(`onToggleAutoPlay state: ${state}`);
+      onPausedChange={state => {
+        Alert.alert(`onPausedChange: ${state}`);
+        setPaused(state);
       }}
+      videoHeight={videoHeight}
+      paused={paused}
+      isFullScreen={isFullScreen}
     />
   );
 };
@@ -68,7 +76,7 @@ export const Example = () => {
 
 - Add more custom props
 - Add Previous & Next button
-- Rewrite the gesture section with react-native-gusture-handle V2
+- ~Rewrite the gesture section with react-native-gusture-handle V2~
 - ...and more
 
 ## Configuration

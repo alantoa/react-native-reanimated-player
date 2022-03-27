@@ -48,8 +48,8 @@ static void InitializeFlipper(UIApplication *application) {
 
   MBFingerTipWindow *window = [[MBFingerTipWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
   window.alwaysShowTouches = YES;
-  
   self.window = window;
+  
   UIViewController *rootViewController = [UIViewController new];
   rootViewController.view = rootView;
   self.window.rootViewController = rootViewController;

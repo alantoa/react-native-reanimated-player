@@ -1,6 +1,6 @@
 {
   "name": "react-native-reanimated-player",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "A react-native video player that interacts like Youtube player, built upon Reanimted v2 & react-native-gesture-handle",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -25,7 +25,8 @@
     "prepare": "bob build",
     "release": "release-it",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
-    "test": "jest"
+    "test": "jest",
+    "bootstrap": "yarn && cd example && yarn && yarn pods"
   },
   "keywords": [
     "react-native",
@@ -71,18 +72,19 @@
     "lottie-react-native": "^5.0.1",
     "metro-react-native-babel-preset": "^0.66.2",
     "react-native": "0.66.4",
-    "react-native-awesome-slider": "^2.0.1",
+    "react-native-awesome-slider": "^2.0.3",
     "react-native-builder-bob": "^0.18.2",
     "react-native-gesture-handler": "^2.3.2",
     "react-native-orientation-locker": "*",
     "react-native-reanimated": "2.1.0",
-    "react-native-safe-area-context": "^3.3.2",
+    "react-native-safe-area-context": "^4.2.2",
     "react-native-video": "^5.2.0",
     "react-test-renderer": "17.0.2",
     "release-it": "*",
     "typescript": "^4.4.4"
   },
   "peerDependencies": {
+    "@react-navigation/core": "*",
     "lottie-react-native": ">=4.0.0",
     "react": "*",
     "react-native": "*",
@@ -90,8 +92,7 @@
     "react-native-gesture-handler": ">=2.0.0",
     "react-native-orientation-locker": "*",
     "react-native-reanimated": ">=2.0.0",
-    "react-native-safe-area-context": "*",
-    "@react-navigation/core": "*"
+    "react-native-safe-area-context": "*"
   },
   "jest": {
     "preset": "react-native",

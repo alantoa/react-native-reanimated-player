@@ -11,6 +11,7 @@ import {
   Image,
   ImageStyle,
   ScrollView,
+  StatusBar,
   StyleProp,
   StyleSheet,
   TouchableHighlight,
@@ -41,7 +42,7 @@ import { springConfig, videoInfo, VIDEO_MIN_HEIGHT } from '../constants';
 import { PlayerContext } from '../state/context';
 import { setPlayerPaused, setPlayerPoint } from '../state/reducer';
 import { palette } from '../theme/palette';
-import { height, width } from '../utils';
+import { height, isIos, width } from '../utils';
 import { mb, mr, mt, px2dp } from '../utils/ui-tools';
 
 const AnimatedLottieView = Animated.createAnimatedComponent(LottieView);
@@ -52,7 +53,7 @@ const flexRow: ViewStyle = {
   flexDirection: 'row',
   alignItems: 'center',
 };
-
+const StatusBarHeight = isIos ? 0 : StatusBar?.currentHeight ?? 0;
 const Avatar = ({
   size,
   style,
@@ -90,7 +91,10 @@ export const VideoScreen = ({
 
   const { store, dispatch } = useContext(PlayerContext);
   const DISMISS_POINT = height - 45 - insets.bottom;
-  const SNAP_POINT = [0, height - 42 - VIDEO_MIN_HEIGHT - insets.bottom];
+  const SNAP_POINT = [
+    0,
+    height + StatusBarHeight - 45 - VIDEO_MIN_HEIGHT - insets.bottom,
+  ];
   const diasbled = Boolean(store.snapPoint > SNAP_POINT[0]);
   const paused = Boolean(store.paused || store.snapPoint === -1);
 
@@ -668,7 +672,7 @@ export const VideoScreen = ({
           <BottomSheetModal
             ref={optionsModalRef}
             index={indexOptions.current}
-            snapPoints={[210]}
+            snapPoints={[210 - StatusBarHeight]}
             backdropComponent={renderOptionsBackdrop}
             backgroundStyle={[
               styles.backgroundStyle,
