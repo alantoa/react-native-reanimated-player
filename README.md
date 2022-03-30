@@ -15,7 +15,7 @@
     </tr>
     <tr>
       <td><img width="260" height="480" src="./assets/example.gif" alt="basic usage"></td>
-      <td><img width="260" height="480" src="./assets/example2.gif" alt="Custom usage"></td>
+      <td><img width="221" height="480" src="./assets/example2.gif" alt="Custom usage"></td>
     </tr>
   </table>
 </div>
