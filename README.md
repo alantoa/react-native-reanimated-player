@@ -8,16 +8,16 @@
 </div>
 
 <div align="center">
-<table style='width:100%;'>
-  <tr>
-    <td><h4 align='center'>Player basic usage</h4></td>
-     <td><h4 align='center'><a href="https://github.com/alantoa/react-native-reanimated-player/tree/main/example" >▶️ Custom usage for example</a></h4></td>
-  </tr>
-  <tr>
-    <td><img width="260" height="480" src="./assets/example.gif" alt="basic usage"></td>
-    <td><img width="260" height="480" src="./assets/example2.gif" alt="Custom usage"></td>
-  </tr>
- </table>
+  <table style='width:100%;'>
+    <tr>
+      <td><h4 align='center'>Player basic usage</h4></td>
+      <td><h4 align='center'><a href="https://github.com/alantoa/react-native-reanimated-player/tree/main/example" >▶️ Custom usage for example</a></h4></td>
+    </tr>
+    <tr>
+      <td><img width="260" height="480" src="./assets/example.gif" alt="basic usage"></td>
+      <td><img width="260" height="480" src="./assets/example2.gif" alt="Custom usage"></td>
+    </tr>
+  </table>
 </div>
 <h4 align='center'><a href="https://twitter.com/alan_toa/status/1507732889181786118" >▶️ Watch example video</a></h4>
 

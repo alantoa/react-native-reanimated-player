@@ -4,7 +4,12 @@
 
 ## Overview
 
-...
+<table style='width:100%;'>
+  <tr>
+    <td width="55%">YouTube video player example</td>
+    <td width="45%"><img src="../assets/example2.gif" alt="Custom usage"></td>
+  </tr>
+</table>
 
 ## Get Start
 
