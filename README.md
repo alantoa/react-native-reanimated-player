@@ -1,6 +1,6 @@
 <div align="center">
   <blockquote><i>`JSThread` to `JSThread`, `UIThread` to `UIThread`.</i></blockquote>
-  <h1 align="center">React Native Awesome Video Player</h1>
+  <h1 align="center">React Native Reanimated Player</h1>
 
 [![Reanimated v2 version](https://img.shields.io/github/package-json/v/alantoa/react-native-reanimated-player/master?label=Reanimated%20v2&style=flat-square)](https://www.npmjs.com/package/react-native-reanimated-player) [![npm](https://img.shields.io/npm/l/react-native-reanimated-player?style=flat-square)](https://www.npmjs.com/package/react-native-reanimated-player) [![npm](https://img.shields.io/badge/types-included-blue?style=flat-square)](https://www.npmjs.com/package/react-native-reanimated-player) [![runs with expo](https://img.shields.io/badge/Runs%20with%20Expo-4630EB.svg?style=flat-square&logo=EXPO&labelColor=f3f3f3&logoColor=000)](https://expo.io/)
 
@@ -8,10 +8,18 @@
 </div>
 
 <div align="center">
-  <img src="./assets/example.gif" width="30%" />
-  <br/> 
- <p><a href="https://twitter.com/alan_toa/status/1507732889181786118" >🔗 Watch example video</a></p>
+<table style='width:100%;'>
+  <tr>
+    <td><h4 align='center'>Player basic usage</h4></td>
+     <td><h4 align='center'><a href="https://github.com/alantoa/react-native-reanimated-player/tree/main/example" >▶️ Custom usage for example</a></h4></td>
+  </tr>
+  <tr>
+    <td><img width="260" height="480" src="./assets/example.gif" alt="basic usage"></td>
+    <td><img width="260" height="480" src="./assets/example2.gif" alt="Custom usage"></td>
+  </tr>
+ </table>
 </div>
+<h4 align='center'><a href="https://twitter.com/alan_toa/status/1507732889181786118" >▶️ Watch example video</a></h4>
 
 ## Installation
 

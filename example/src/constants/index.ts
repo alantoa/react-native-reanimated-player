@@ -17,13 +17,6 @@ const prefix = 'https://img.alantoa.com/renimated-player/';
 
 export const videos = [
   {
-    cover: `${prefix}cover0.webp`,
-    title: 'Natural',
-    author: 'Imagine Dragons',
-    pv: '304k',
-    avatar: `${prefix}avatar0.jpeg`,
-  },
-  {
     cover: `${prefix}cover1.webp`,
     title: 'Blank Space live iHeartRadio Jingle Ball 2014/12/12',
     author: 'Taylor Swift',
@@ -31,11 +24,11 @@ export const videos = [
     avatar: `${prefix}avatar1.jpeg`,
   },
   {
-    cover: `${prefix}cover2.jpeg`,
-    title: 'Glassmorphism in React Native',
-    author: 'William Candillon',
-    pv: '302k',
-    avatar: `${prefix}avatar2.jpeg`,
+    cover: `${prefix}cover0.webp`,
+    title: 'Natural',
+    author: 'Imagine Dragons',
+    pv: '304k',
+    avatar: `${prefix}avatar0.jpeg`,
   },
   {
     cover: `${prefix}cover3.webp`,
@@ -43,5 +36,12 @@ export const videos = [
     author: 'Eminem',
     pv: '301k',
     avatar: `${prefix}avatar3.jpeg`,
+  },
+  {
+    cover: `${prefix}cover2.jpeg`,
+    title: 'Glassmorphism in React Native',
+    author: 'William Candillon',
+    pv: '302k',
+    avatar: `${prefix}avatar2.jpeg`,
   },
 ];
