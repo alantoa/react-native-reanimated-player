@@ -681,19 +681,10 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
      */
     const onSeek = (data: OnSeekData) => {
       if (isScrubbing.value) {
-        // Seeking may be false here if the user released the seek bar while the player was still processing
-        // the last seek command. In this case, perform the steps that have been postponed.
-        if (!isSeeking.current) {
-          setControlTimeout();
-          pause();
-        }
-        isSeeking.current = false;
         isScrubbing.value = false;
-
         setCurrentTime(data.currentTime);
-      } else {
-        isSeeking.current = false;
       }
+      isSeeking.current = false;
     };
 
     /**
