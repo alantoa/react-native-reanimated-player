@@ -53,7 +53,7 @@ const flexRow: ViewStyle = {
   flexDirection: 'row',
   alignItems: 'center',
 };
-const StatusBarHeight = isIos ? 0 : StatusBar?.currentHeight ?? 0;
+const StatusBarHeight = isIos ? 0 : StatusBar?.currentHeight ?? 0 + 5;
 const Avatar = ({
   size,
   style,
@@ -93,7 +93,7 @@ export const VideoScreen = ({
   const DISMISS_POINT = height - 45 - insets.bottom;
   const SNAP_POINT = [
     0,
-    height + StatusBarHeight - 45 - VIDEO_MIN_HEIGHT - insets.bottom,
+    height + StatusBarHeight - 40 - VIDEO_MIN_HEIGHT - insets.bottom,
   ];
   const diasbled = Boolean(store.snapPoint > SNAP_POINT[0]);
   const paused = Boolean(store.paused || store.snapPoint === -1);
@@ -417,7 +417,7 @@ export const VideoScreen = ({
         if (-translationY >= 40 && snapPointIndex.value === 0) {
           runOnJS(enterFullScreen)();
         }
-        const dragToss = 0.08;
+        const dragToss = 0.2;
         const endOffsetY =
           sheetTranslationY.value +
           panTranslationY.value +
@@ -435,7 +435,7 @@ export const VideoScreen = ({
 
         if (snapPointIndex.value === 1 && translationY > 0) {
           const y =
-            sheetTranslationY.value + panTranslationY.value + velocityY * 0.001;
+            sheetTranslationY.value + panTranslationY.value + velocityY * 0.05;
           if (y > DISMISS_POINT - VIDEO_MIN_HEIGHT / 2) {
             destSnapPoint = DISMISS_POINT;
             pointIndex = -1;
