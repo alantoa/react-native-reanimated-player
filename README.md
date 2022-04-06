@@ -21,6 +21,8 @@
 </div>
 <h4 align='center'><a href="https://twitter.com/alan_toa/status/1507732889181786118" >▶️ Watch example video</a></h4>
 
+## ⚠️ Expo
+This is the react-native-video version, If you use Expo, please check out [expo-reanimated-av-player](https://github.com/alantoa/expo-reanimated-av-player)!
 ## Installation
 
 First you have to follow installation instructions of:
