@@ -2,6 +2,7 @@
 import LottieView from 'lottie-react-native';
 import React, {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -77,15 +78,9 @@ export type VideoProps = VideoProperties & {
   paused: boolean;
   onPausedChange: (paused: boolean) => void;
   onTapPause?: (paused: boolean) => void;
-  sliderProps?: Pick<
+  sliderProps?: Omit<
     AwesomeSliderProps,
-    | 'renderBubble'
-    | 'bubble'
-    | 'bubbleMaxWidth'
-    | 'bubbleWidth'
-    | 'bubbleTranslateY'
-    | 'disable'
-    | 'panHitSlop'
+    'progress' | 'minimumValue' | 'maximumValue'
   >;
   videoHeight: Animated.SharedValue<number>;
   customAnimationStyle?: Animated.AnimateStyle<ViewStyle>;
@@ -97,6 +92,9 @@ export type VideoProps = VideoProperties & {
   renderFullScreenBackIcon?: () => JSX.Element;
   renderMore?: () => JSX.Element;
   renderFullScreen?: () => JSX.Element;
+  onVideoPlayEnd?: () => void;
+  onAutoPlayText?: string;
+  offAutoPlayText?: string;
 };
 export type VideoPlayerRef = {
   /**
@@ -159,6 +157,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       renderMore,
       renderFullScreen,
       renderFullScreenBackIcon,
+      onVideoPlayEnd,
+      onAutoPlayText = 'Autoplay is on',
+      offAutoPlayText = 'Autoplay is off',
       ...rest
     },
     ref,
@@ -177,8 +178,10 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     const rightDoubleTapBoundary =
       dimensions.width - leftDoubleTapBoundary - insets.left - insets.right;
 
-    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isFullScreenState, setIsFullscreen] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [isLoadEnd, setIsLoadEnd] = useState(false);
     const [loading, setIsLoading] = useState(false);
     const [showTimeRemaining, setShowTimeRemaining] = useState(true);
     const [allowAutoPlayVideo, setAllowAutoPlayVideo] = useState(autoPlay);
@@ -208,9 +211,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     /**
      * refs
      */
-    const player = useRef({
-      duration: 0,
-    });
+
     const videoPlayer = useRef<Video>(null);
     const mounted = useRef(false);
     const autoPlayAnimation = useSharedValue(autoPlay ? 1 : 0);
@@ -218,8 +219,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     /**
      * reanimated value
      */
-    const isLoadEnd = useSharedValue(false);
-
     const controlViewOpacity = useSharedValue(showOnStart ? 1 : 0);
 
     const autoPlayTextAnimation = useSharedValue(0);
@@ -432,6 +431,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
      */
     const enterFullScreen = () => {
       onEnterFullscreen?.();
+      setIsFullscreen(true);
       StatusBar.setHidden(true, 'fade');
       Orientation.lockToLandscape();
       isFullScreen.value = true;
@@ -440,6 +440,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
 
     const exitFullScreen = () => {
       onExitFullscreen?.();
+      setIsFullscreen(false);
       StatusBar.setHidden(false, 'fade');
       Orientation.lockToPortrait();
       isFullScreen.value = false;
@@ -455,8 +456,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
           StatusBar.setHidden(true, 'fade');
         }
       });
-
-      setIsFullscreen(!isFullscreen);
     };
     const toggleFullScreen = () => {
       'worklet';
@@ -539,21 +538,12 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
           if (numberOfPointers !== 1) {
             return;
           }
-          if (!doubleTapIsAlive.value) {
-            resetControlTimeout();
-            if (controlViewOpacity.value === 0) {
-              showControlAnimation();
-              return;
-            }
-          }
-
           if (x < leftDoubleTapBoundary) {
             doubleLeftOpacity.value = 1;
             rippleLeft.current?.onPress({ x, y });
             runOnJS(seekByStep)(true);
             return;
           }
-
           if (x > rightDoubleTapBoundary) {
             doubleRightOpacity.value = 1;
             rippleRight.current?.onPress({
@@ -571,9 +561,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
      * @returns
      */
     const togglePlayOnJS = () => {
-      if (isLoadEnd.value) {
+      if (isLoadEnd) {
         onReplyVideo();
-        isLoadEnd.value = false;
+        setIsLoadEnd(false);
       }
       onTapPause?.(!paused);
       paused ? play() : pause();
@@ -600,14 +590,6 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
           onTapBack?.();
         }
       });
-    };
-    const onBackTapHandler = () => {
-      'worklet';
-      const status = checkTapTakesEffect();
-      if (!status) {
-        return;
-      }
-      runOnJS(onBackTapHandlerOnJS)();
     };
 
     /**
@@ -651,8 +633,8 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       return showTimeRemaining
         ? `${formatTimeToMins(currentTime)}`
         : `-${formatTime({
-            time: player.current.duration - currentTime,
-            duration: player.current.duration,
+            time: duration - currentTime,
+            duration: duration,
           })}`;
     };
     /**
@@ -665,14 +647,15 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       videoPlayer.current?.seek(time);
     };
     const onLoad = (data: OnLoadData) => {
-      player.current.duration = data?.duration;
+      setDuration(data?.duration);
       max.value = data?.duration;
       setIsLoading(false);
       setControlTimeout();
     };
     const onEnd = () => {
-      isLoadEnd.value = true;
+      setIsLoadEnd(true);
       pause();
+      onVideoPlayEnd?.();
     };
     /**
      * For onSeek we clear scrubbing if set.
@@ -681,10 +664,19 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
      */
     const onSeek = (data: OnSeekData) => {
       if (isScrubbing.value) {
+        // Seeking may be false here if the user released the seek bar while the player was still processing
+        // the last seek command. In this case, perform the steps that have been postponed.
+        if (!isSeeking.current) {
+          setControlTimeout();
+          pause();
+        }
+        isSeeking.current = false;
         isScrubbing.value = false;
+
         setCurrentTime(data.currentTime);
+      } else {
+        isSeeking.current = false;
       }
-      isSeeking.current = false;
     };
 
     /**
@@ -743,7 +735,63 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       autoPlayTextAnimation.value = withDelay(3000, withTiming(0));
       runOnJS(toggleAutoPlayOnJS)();
     };
+    const _renderMore = useCallback(
+      () => (
+        <TapControler onPress={onMoreTapHandler}>
+          {renderMore ? (
+            renderMore()
+          ) : (
+            <Image
+              source={require('./assets/more_24.png')}
+              style={styles.more}
+            />
+          )}
+        </TapControler>
+      ),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [renderMore],
+    );
+    const onBackTapHandler = () => {
+      'worklet';
+      const status = checkTapTakesEffect();
+      if (!status) {
+        return;
+      }
+      runOnJS(onBackTapHandlerOnJS)();
+    };
 
+    const _renderBack = useCallback(
+      () => (
+        <TapControler onPress={onBackTapHandler}>
+          {renderBackIcon ? (
+            renderBackIcon()
+          ) : (
+            <Image
+              source={require('./assets/right_16.png')}
+              style={styles.back}
+            />
+          )}
+        </TapControler>
+      ),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [renderBackIcon],
+    );
+    const _renderFullScreenBack = useCallback(
+      () => (
+        <TapControler onPress={onBackTapHandler}>
+          {renderFullScreenBackIcon ? (
+            renderFullScreenBackIcon()
+          ) : (
+            <Image
+              source={require('./assets/right_16.png')}
+              style={styles.back}
+            />
+          )}
+        </TapControler>
+      ),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [renderBackIcon],
+    );
     const onMoreTapHandler = () => {
       'worklet';
       const status = checkTapTakesEffect();
@@ -800,20 +848,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                     styles.topControls,
                     topControlStyle,
                   ]}>
-                  <View style={styles.back}>
-                    {Boolean(onTapBack) && (
-                      <TapControler onPress={onBackTapHandler}>
-                        {renderBackIcon ? (
-                          renderBackIcon()
-                        ) : (
-                          <Image
-                            source={require('./assets/right_16.png')}
-                            style={styles.back}
-                          />
-                        )}
-                      </TapControler>
-                    )}
-                  </View>
+                  {Boolean(onTapBack) && _renderBack()}
                   <View style={controlStyle.line}>
                     {Boolean(onToggleAutoPlay) && (
                       <Animated.View
@@ -821,8 +856,8 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                         <Text
                           tx={
                             allowAutoPlayVideo
-                              ? 'Autoplay is on'
-                              : 'Autoplay is off'
+                              ? onAutoPlayText
+                              : offAutoPlayText
                           }
                           t4
                           color={'#fff'}
@@ -840,14 +875,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                         />
                       </TapControler>
                     )}
-                    {Boolean(onTapMore) && (
-                      <TapControler onPress={onMoreTapHandler}>
-                        <Image
-                          source={require('./assets/more_24.png')}
-                          style={styles.more}
-                        />
-                      </TapControler>
-                    )}
+                    {Boolean(onTapMore) && _renderMore()}
                   </View>
                 </Animated.View>
                 <Animated.View
@@ -857,20 +885,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                     styles.topFullscreenControls,
                     topFullscreenControlStyle,
                   ]}
-                  pointerEvents={isFullscreen ? 'auto' : 'none'}>
+                  pointerEvents={isFullScreenState ? 'auto' : 'none'}>
                   <View style={controlStyle.line}>
-                    {Boolean(onTapBack) && (
-                      <TapControler onPress={onBackTapHandler}>
-                        {renderFullScreenBackIcon ? (
-                          renderFullScreenBackIcon()
-                        ) : (
-                          <Image
-                            source={require('./assets/right_16.png')}
-                            style={styles.back}
-                          />
-                        )}
-                      </TapControler>
-                    )}
+                    {Boolean(onTapBack) && _renderFullScreenBack()}
                     <Text
                       tx={headerBarTitle}
                       h5
@@ -883,7 +900,15 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                     {Boolean(onToggleAutoPlay) && (
                       <Animated.View
                         style={[controlStyle.autoPlayText, autoPlayTextStyle]}>
-                        <Text tx="自动播放已开启" t4 color={'#fff'} />
+                        <Text
+                          tx={
+                            allowAutoPlayVideo
+                              ? onAutoPlayText
+                              : offAutoPlayText
+                          }
+                          t4
+                          color={'#fff'}
+                        />
                       </Animated.View>
                     )}
                     {Boolean(onToggleAutoPlay) && (
@@ -896,18 +921,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                         />
                       </TapControler>
                     )}
-                    {Boolean(onTapMore) && (
-                      <TapControler onPress={onMoreTapHandler}>
-                        {renderMore ? (
-                          renderMore()
-                        ) : (
-                          <Image
-                            source={require('./assets/more_24.png')}
-                            style={styles.more}
-                          />
-                        )}
-                      </TapControler>
-                    )}
+                    {Boolean(onTapMore) && _renderMore()}
                   </View>
                 </Animated.View>
                 <View style={controlStyle.pauseView}>
@@ -939,7 +953,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                         <Text
                           style={controlStyle.timerText}
                           color={palette.W(1)}
-                          tx={` / ${formatTimeToMins(player.current.duration)}`}
+                          tx={` / ${formatTimeToMins(duration)}`}
                           t3
                         />
                       </Text>
@@ -968,22 +982,24 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                       },
                       fullScreenSliderStyle,
                     ]}>
-                    <Slider
-                      theme={theme}
-                      progress={progress}
-                      onSlidingComplete={onSlidingComplete}
-                      onSlidingStart={onSlidingStart}
-                      minimumValue={min}
-                      maximumValue={max}
-                      isScrubbing={isScrubbing}
-                      bubble={secondToTime}
-                      disableTapEvent
-                      onTap={onTapSlider}
-                      thumbScaleValue={controlViewOpacity}
-                      thumbWidth={8}
-                      sliderHeight={2}
-                      {...sliderProps}
-                    />
+                    {duration > 0 && (
+                      <Slider
+                        theme={theme}
+                        progress={progress}
+                        onSlidingComplete={onSlidingComplete}
+                        onSlidingStart={onSlidingStart}
+                        minimumValue={min}
+                        maximumValue={max}
+                        isScrubbing={isScrubbing}
+                        bubble={secondToTime}
+                        disableTapEvent
+                        onTap={onTapSlider}
+                        thumbScaleValue={controlViewOpacity}
+                        thumbWidth={8}
+                        sliderHeight={2}
+                        {...sliderProps}
+                      />
+                    )}
                   </Animated.View>
                 </Animated.View>
               </Animated.View>
@@ -1029,31 +1045,33 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                 </Animated.View>
               </Ripple>
               <Animated.View style={[styles.slider, bottomSliderStyle]}>
-                <Slider
-                  theme={theme}
-                  progress={progress}
-                  onSlidingComplete={onSlidingComplete}
-                  onSlidingStart={onSlidingStart}
-                  minimumValue={min}
-                  maximumValue={max}
-                  isScrubbing={isScrubbing}
-                  bubble={(value: number) => {
-                    return secondToTime(value);
-                  }}
-                  disableTapEvent
-                  onTap={onTapSlider}
-                  thumbScaleValue={controlViewOpacity}
-                  thumbWidth={12}
-                  sliderHeight={2}
-                  {...sliderProps}
-                />
+                {duration > 0 && (
+                  <Slider
+                    theme={theme}
+                    progress={progress}
+                    onSlidingComplete={onSlidingComplete}
+                    onSlidingStart={onSlidingStart}
+                    minimumValue={min}
+                    maximumValue={max}
+                    isScrubbing={isScrubbing}
+                    bubble={(value: number) => {
+                      return secondToTime(value);
+                    }}
+                    disableTapEvent
+                    onTap={onTapSlider}
+                    thumbScaleValue={controlViewOpacity}
+                    thumbWidth={12}
+                    sliderHeight={2}
+                    {...sliderProps}
+                  />
+                )}
               </Animated.View>
             </Animated.View>
 
             {isIos && (
               <View
                 style={[styles.stopBackView, { left: -insets.left }]}
-                pointerEvents={isFullscreen ? 'auto' : 'none'}
+                pointerEvents={isFullScreenState ? 'auto' : 'none'}
               />
             )}
           </Animated.View>
@@ -1108,12 +1126,8 @@ const styles = StyleSheet.create({
   back: {
     width: 16,
     height: 16,
-    zIndex: 100,
   },
-  backLarge: {
-    width: 24,
-    height: 24,
-  },
+
   more: {
     width: 24,
     height: 24,
@@ -1121,6 +1135,10 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: palette.B(1),
     width: '100%',
+    alignItems: 'center',
+    elevation: 10,
+    justifyContent: 'center',
+    zIndex: 10,
   },
 });
 
