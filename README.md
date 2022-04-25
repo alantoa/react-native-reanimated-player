@@ -32,6 +32,7 @@ First you have to follow installation instructions of:
 - [react-native-orientation-locker](https://github.com/wonday/react-native-orientation-locker/)
 - [react-native-safe-area-context](https://github.com/th3rdwave/react-native-safe-area-context)
 - [react-native-video](https://github.com/react-native-video/react-native-video)
+- [react-native-lottie](https://github.com/lottie-react-native/lottie-react-native)
 
 If `react-native-gesture-handler` version >= 2:
 
