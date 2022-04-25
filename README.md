@@ -37,7 +37,7 @@ First you have to follow installation instructions of:
 If `react-native-gesture-handler` version >= 2:
 
 ```sh
-yarn add react-native-reanimated-player@2
+yarn add react-native-reanimated-player
 ```
 
 else use v1:
