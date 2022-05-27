@@ -10,8 +10,8 @@
 <div align="center">
   <table style='width:100%;'>
     <tr>
-      <td><h4 align='center'>Player basic usage</h4></td>
-      <td><h4 align='center'><a href="https://github.com/alantoa/react-native-reanimated-player/tree/main/example" >▶️ Custom usage for example</a></h4></td>
+      <td><h4 align='center'>Basic</h4></td>
+      <td><h4 align='center'><a href="https://github.com/alantoa/react-native-reanimated-player/tree/main/example" >YouTube Player(advanced)</a></h4></td>
     </tr>
     <tr>
       <td><img width="260" height="480" src="./assets/example.gif" alt="basic usage"></td>
