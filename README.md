@@ -302,4 +302,25 @@ The `<VideoPlayer/>` component has the following configuration properties:
     <td>❌</td>
     <td>undefined</td>
   </tr>
+  <tr>
+    <td>children</td>
+    <td>JSX</td>
+    <td>child components to be rendered under video player controls</td>
+    <td>❌</td>
+    <td>undefined</td>
+  </tr>
+  <tr>
+    <td>onPostProgress</td>
+    <td>function</td>
+    <td>callback function that is called every progressUpdateInterval milliseconds with info about which position the media is currently playing</td>
+    <td>❌</td>
+    <td>undefined
+  </tr>
+  <tr>
+    <td>onPostSeek</td>
+    <td>function</td>
+    <td>callback function that is called when a seek completes</td>
+    <td>❌</td>
+    <td>undefined
+  </tr>
 </table>

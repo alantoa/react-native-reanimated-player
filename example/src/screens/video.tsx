@@ -569,6 +569,8 @@ export const VideoScreen = ({
               resizeMode="cover"
               isFullScreen={isFullScreen}
               disableControl={diasbled}
+              onPostProgress={() => console.log('onProgress')}
+              onPostSeek={() => console.log('onSeek')}
               renderBackIcon={() => (
                 <Icon
                   name="a-ic_chevrondown_16"
