@@ -95,6 +95,9 @@ export type VideoProps = VideoProperties & {
   onVideoPlayEnd?: () => void;
   onAutoPlayText?: string;
   offAutoPlayText?: string;
+  children?: any;
+  onPostProgress?: (data: OnProgressData) => void;
+  onPostSeek?: (data: OnSeekData) => void;
 };
 export type VideoPlayerRef = {
   /**
@@ -160,6 +163,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       onVideoPlayEnd,
       onAutoPlayText = 'Autoplay is on',
       offAutoPlayText = 'Autoplay is off',
+      children,
+      onPostProgress,
+      onPostSeek,
       ...rest
     },
     ref,
@@ -677,6 +683,9 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       } else {
         isSeeking.current = false;
       }
+      if (onPostSeek) {
+        onPostSeek(data);
+      }
     };
 
     /**
@@ -685,12 +694,16 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
      *
      * @param {object} data The video meta data
      */
-    const onProgress = ({ currentTime: cTime }: OnProgressData) => {
+     const onProgress = (data: OnProgressData) => {
+      const { currentTime: cTime } = data;
       if (!isScrubbing.value) {
         if (!isSeeking.current) {
           progress.value = cTime;
         }
         setCurrentTime(cTime);
+      }
+      if (onPostProgress) {
+        onPostProgress(data);
       }
     };
     /**
@@ -838,6 +851,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
               onProgress={onProgress}
               fullscreenAutorotate={true}
             />
+            {Boolean(children) && children}
             <VideoLoader loading={loading} />
             <Animated.View style={StyleSheet.absoluteFillObject}>
               <Animated.View style={[styles.controlView, controlViewStyles]}>
