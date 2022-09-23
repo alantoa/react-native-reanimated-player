@@ -5832,10 +5832,10 @@ react-is@^16.13.0, react-is@^16.13.1, react-is@^16.7.0:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
-react-native-awesome-slider@^2.0.4:
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/react-native-awesome-slider/-/react-native-awesome-slider-2.0.4.tgz#b1d2df7742b21871162aba6e9a3d0eef4ae31b50"
-  integrity sha512-Gc1W8rZjZhGJ/iiy4OZNz8TNTkmQPGfjNa/7YokiK1Hy84QbdsjXsYgs1BqcJb9paafoOYO2WofYPt4vm2INlg==
+react-native-awesome-slider@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/react-native-awesome-slider/-/react-native-awesome-slider-2.1.2.tgz#9d49a30bfbbfa117750d29008fff6555b805e424"
+  integrity sha512-+OTyxGt2L5uqiYefWOITke3CoTFDbc+1Wm/6IFbFi6Vtbuc63XIxAQ3HZ56Q6RIMpDZrzsnJYlqjZEKOk1NMbQ==
 
 react-native-codegen@^0.0.8:
   version "0.0.8"
