@@ -33,7 +33,9 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import VideoPlayer, { VideoPlayerRef } from 'react-native-reanimated-player';
+import type { VideoPlayerRef } from 'react-native-reanimated-player';
+import { VideoPlayer } from 'react-native-reanimated-player';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, ThemeView } from '../components';
 import { Icon } from '../components/icon';
@@ -257,7 +259,7 @@ export const VideoScreen = ({
   const closeDescModal = () => {
     descModalRef.current?.dismiss();
   };
-  const renderBackdrop = useCallback(props => {
+  const renderBackdrop = useCallback((props: any) => {
     return (
       <Animated.View
         style={[
@@ -300,7 +302,7 @@ export const VideoScreen = ({
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const renderOptionsBackdrop = useCallback(props => {
+  const renderOptionsBackdrop = useCallback((props: any) => {
     return (
       <BottomSheetBackdrop
         disappearsOnIndex={-1}
@@ -535,9 +537,9 @@ export const VideoScreen = ({
             </Animated.View>
             <VideoPlayer
               source={videoInfo.source}
-              playWhenInactive
-              posterResizeMode="cover"
-              ignoreSilentSwitch="ignore"
+              // playWhenInactive
+              // posterResizeMode="cover"
+              // ignoreSilentSwitch="ignore"
               headerBarTitle={`${videoInfo.author} - ${videoInfo.title}`}
               onTapBack={foldVideo}
               paused={paused}
@@ -564,9 +566,9 @@ export const VideoScreen = ({
               }}
               videoHeight={videoHeight}
               customAnimationStyle={customAnimationStyle}
-              onCustomPanGesture={panGesture}
+              // onCustomPanGesture={panGesture}
               style={{ marginBottom: sliderTranslateY }}
-              resizeMode="cover"
+              // resizeMode="cover"
               isFullScreen={isFullScreen}
               disableControl={diasbled}
               onPostProgress={() => console.log('onProgress')}

@@ -1,17 +1,11 @@
 {
-  "name": "react-native-video-player-example",
+  "name": "example-youtube",
   "version": "1.0.0",
-  "private": true,
   "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "start": "react-native start",
-    "test": "jest",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "icon": "npx iconfont-rn",
-    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
-    "pods": "cd ios && pod install",
-    "build-android": "cd android && ./gradlew assembleRelease"
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web"
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^4",
@@ -19,51 +13,27 @@
     "@react-navigation/bottom-tabs": "^6.2.0",
     "@react-navigation/native": "^6.0.6",
     "@react-navigation/native-stack": "^6.2.5",
-    "babel-plugin-module-resolver": "^4.1.0",
-    "lottie-react-native": "^5.0.1",
-    "react": "17.0.2",
-    "react-native": "^0.67.4",
-    "react-native-awesome-slider": "^2.1.2",
+    "babel-plugin-module-resolver": "^5.0.0",
+    "expo": "~48.0.10",
+    "expo-splash-screen": "~0.18.1",
+    "expo-status-bar": "~1.4.4",
+    "lottie-react-native": "^6.0.0-rc.3",
+    "react": "18.2.0",
+    "react-native": "0.71.6",
+    "react-native-awesome-slider": "^2.4.0",
     "react-native-fast-image": "^8.5.11",
-    "react-native-gesture-handler": "^2.3.2",
+    "react-native-gesture-handler": "^2.9.0",
     "react-native-inkwell": "^0.4.5",
     "react-native-orientation-locker": "^1.4.0",
-    "react-native-reanimated": "^2.3.1",
-    "react-native-redash": "^16.2.3",
+    "react-native-reanimated": "^3.0.2",
+    "react-native-redash": "^18.1.0",
     "react-native-safe-area-context": "^4.2.2",
     "react-native-screens": "^3.10.1",
-    "react-native-svg": "^12.3.0",
-    "react-native-video": "^5.2.0"
+    "react-native-svg": "^13.9.0",
+    "react-native-video": "^5.2.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9",
-    "@babel/runtime": "^7.12.5",
-    "@react-native-community/eslint-config": "^2.0.0",
-    "@types/jest": "^26.0.23",
-    "@types/react-native": "^0.67.3",
-    "@types/react-test-renderer": "^17.0.1",
-    "@typescript-eslint/eslint-plugin": "^5.7.0",
-    "@typescript-eslint/parser": "^5.7.0",
-    "babel-jest": "^26.6.3",
-    "eslint": "^7.14.0",
-    "jest": "^26.6.3",
-    "metro-react-native-babel-preset": "^0.66.2",
-    "react-native-iconfont-cli": "^2.2.4",
-    "react-test-renderer": "17.0.2",
-    "typescript": "^4.4.4"
+    "@babel/core": "^7.20.0"
   },
-  "resolutions": {
-    "@types/react": "^17"
-  },
-  "jest": {
-    "preset": "react-native",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
-    ]
-  }
+  "private": true
 }

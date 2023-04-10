@@ -88,6 +88,6 @@ lib/
 
 
 # Native 
-example/ios
-example/android
-example/.expo
+/ios
+/android
+/.expo
