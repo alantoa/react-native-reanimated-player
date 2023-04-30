@@ -8,29 +8,29 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@gorhom/bottom-sheet": "^4",
+    "@gorhom/bottom-sheet": "5.0.0-alpha.0",
     "@gorhom/portal": "^1.0.12",
     "@react-navigation/bottom-tabs": "^6.2.0",
     "@react-navigation/native": "^6.0.6",
     "@react-navigation/native-stack": "^6.2.5",
     "babel-plugin-module-resolver": "^5.0.0",
     "expo": "~48.0.10",
+    "expo-image": "^1.2.1",
     "expo-splash-screen": "~0.18.1",
     "expo-status-bar": "~1.4.4",
     "lottie-react-native": "^6.0.0-rc.3",
     "react": "18.2.0",
     "react-native": "0.71.6",
     "react-native-awesome-slider": "^2.4.0",
-    "react-native-fast-image": "^8.5.11",
     "react-native-gesture-handler": "^2.9.0",
     "react-native-inkwell": "^0.4.5",
     "react-native-orientation-locker": "^1.4.0",
-    "react-native-reanimated": "^3.0.2",
+    "react-native-reanimated": "^3.1.0",
     "react-native-redash": "^18.1.0",
     "react-native-safe-area-context": "^4.2.2",
     "react-native-screens": "^3.10.1",
     "react-native-svg": "^13.9.0",
-    "react-native-video": "^5.2.1"
+    "react-native-video": "alpha"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

@@ -95,7 +95,7 @@ export const VideoScreen = ({
   const DISMISS_POINT = height - 45 - insets.bottom;
   const SNAP_POINT = [
     0,
-    height + StatusBarHeight - 40 - VIDEO_MIN_HEIGHT - insets.bottom,
+    height + StatusBarHeight - 50 - VIDEO_MIN_HEIGHT - insets.bottom,
   ];
   const diasbled = Boolean(store.snapPoint > SNAP_POINT[0]);
   const paused = Boolean(store.paused || store.snapPoint === -1);
@@ -556,7 +556,7 @@ export const VideoScreen = ({
                 console.log(`onToggleAutoPlay state: ${state}`);
               }}
               videoDefaultHeight={VIDEO_DEFAULT_HEIGHT}
-              ref={videoPlayerRef}
+              // ref={videoPlayerRef}
               sliderProps={{
                 renderBubble: renderBubble,
                 bubbleTranslateY: -60,
@@ -566,7 +566,7 @@ export const VideoScreen = ({
               }}
               videoHeight={videoHeight}
               customAnimationStyle={customAnimationStyle}
-              // onCustomPanGesture={panGesture}
+              onCustomPanGesture={panGesture}
               style={{ marginBottom: sliderTranslateY }}
               // resizeMode="cover"
               isFullScreen={isFullScreen}

@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import LottieView from 'lottie-react-native';
 import React, {
   forwardRef,
@@ -98,6 +97,7 @@ export type VideoProps = VideoProperties & {
   children?: any;
   onPostProgress?: (data: OnProgressData) => void;
   onPostSeek?: (data: OnSeekData) => void;
+  renderVideoComponent: () => JSX.Element;
 };
 export type VideoPlayerRef = {
   /**
@@ -122,7 +122,7 @@ export type VideoPlayerRef = {
   setSeekTo: (second: number) => void;
 };
 
-const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
+export const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
   (
     {
       resizeMode = 'contain',
@@ -166,6 +166,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
       children,
       onPostProgress,
       onPostSeek,
+      renderVideoComponent,
       ...rest
     },
     ref,
@@ -221,7 +222,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
     const videoPlayer = useRef<Video>(null);
     const mounted = useRef(false);
     const autoPlayAnimation = useSharedValue(autoPlay ? 1 : 0);
-    const { rippleLeft, rippleRight } = useRefs();
+    // const { rippleLeft, rippleRight } = useRefs();
     /**
      * reanimated value
      */
@@ -546,16 +547,16 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
           }
           if (x < leftDoubleTapBoundary) {
             doubleLeftOpacity.value = 1;
-            rippleLeft.current?.onPress({ x, y });
+            // rippleLeft.current?.onPress({ x, y });
             runOnJS(seekByStep)(true);
             return;
           }
           if (x > rightDoubleTapBoundary) {
             doubleRightOpacity.value = 1;
-            rippleRight.current?.onPress({
-              x: x - rightDoubleTapBoundary,
-              y,
-            });
+            // rippleRight.current?.onPress({
+            //   x: x - rightDoubleTapBoundary,
+            //   y,
+            // });
             runOnJS(seekByStep)(false);
 
             return;
@@ -837,21 +838,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
         />
         <GestureDetector gesture={gesture}>
           <Animated.View style={[styles.container, videoStyle, style]}>
-            {/* @ts-ignore */}
-            <Video
-              {...rest}
-              ref={videoPlayer}
-              resizeMode={resizeMode}
-              paused={paused}
-              onLoadStart={onLoadStart}
-              style={styles.video}
-              source={source}
-              onLoad={onLoad}
-              onSeek={onSeek}
-              onEnd={onEnd}
-              onProgress={onProgress}
-              fullscreenAutorotate={true}
-            />
+            {renderVideoComponent?.()}
             {Boolean(children) && children}
             <VideoLoader loading={loading} />
             <Animated.View style={StyleSheet.absoluteFillObject}>
@@ -1018,7 +1005,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                   </Animated.View>
                 </Animated.View>
               </Animated.View>
-              <Ripple
+              {/* <Ripple
                 ref={rippleLeft}
                 onAnimationEnd={() => {
                   doubleLeftOpacity.value = 0;
@@ -1058,7 +1045,7 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoProps>(
                   />
                   <Text tx="10s" isCenter color={palette.W(1)} t5 />
                 </Animated.View>
-              </Ripple>
+              </Ripple> */}
               <Animated.View style={[styles.slider, bottomSliderStyle]}>
                 {duration > 0 && (
                   <Slider
