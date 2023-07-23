@@ -10,6 +10,7 @@ const hitSlop = { left: 8, bottom: 4, right: 8, top: 4 };
 type TapControlerProps = {
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
+  children?: React.ReactNode;
 };
 
 export const TapControler: React.FC<TapControlerProps> = ({

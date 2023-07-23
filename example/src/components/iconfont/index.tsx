@@ -2,8 +2,8 @@
 /* eslint-disable */
 
 import React, { FunctionComponent } from 'react';
-import { ViewProps } from 'react-native';
-import { GProps } from 'react-native-svg';
+import type { ViewProps } from 'react-native';
+import type { GProps } from 'react-native-svg';
 import IconCloseBold from './IconCloseBold';
 import IconAdd from './IconAdd';
 import IconYoutubeShorts from './IconYoutubeShorts';
@@ -27,7 +27,18 @@ export { default as IconFlagoutline } from './IconFlagoutline';
 export { default as IconSetting } from './IconSetting';
 export { default as IconFeedback } from './IconFeedback';
 
-export type IconNames = 'close-bold' | 'add' | 'youtube-shorts' | 'subscriptions' | 'video_library' | 'home' | 'close' | 'a-ic_chevrondown_16' | 'flagoutline' | 'setting' | 'feedback';
+export type IconNames =
+  | 'close-bold'
+  | 'add'
+  | 'youtube-shorts'
+  | 'subscriptions'
+  | 'video_library'
+  | 'home'
+  | 'close'
+  | 'a-ic_chevrondown_16'
+  | 'flagoutline'
+  | 'setting'
+  | 'feedback';
 
 interface Props extends GProps, ViewProps {
   name: IconNames;
@@ -60,8 +71,6 @@ let IconFont: FunctionComponent<Props> = ({ name, ...rest }) => {
     case 'feedback':
       return <IconFeedback key="11" {...rest} />;
   }
-
-  return null;
 };
 
 IconFont = React.memo ? React.memo(IconFont) : IconFont;

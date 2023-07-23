@@ -2,7 +2,7 @@
 /* eslint-disable */
 
 import React, { FunctionComponent } from 'react';
-import { ViewProps } from 'react-native';
+import type { ViewProps } from 'react-native';
 import { Svg, GProps, Path } from 'react-native-svg';
 import { getIconColor } from './helper';
 

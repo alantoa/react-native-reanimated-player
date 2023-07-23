@@ -1,8 +1,5 @@
-/* tslint:disable */
-/* eslint-disable */
-
 import React, { FunctionComponent } from 'react';
-import { ViewProps } from 'react-native';
+import type { ViewProps } from 'react-native';
 import { Svg, GProps, Path } from 'react-native-svg';
 import { getIconColor } from './helper';
 
@@ -11,7 +8,11 @@ interface Props extends GProps, ViewProps {
   color?: string | string[];
 }
 
-let IconYoutubeShorts: FunctionComponent<Props> = ({ size, color, ...rest }) => {
+let IconYoutubeShorts: FunctionComponent<Props> = ({
+  size,
+  color,
+  ...rest
+}) => {
   return (
     <Svg viewBox="0 0 1024 1024" width={size} height={size} {...rest}>
       <Path
@@ -26,6 +27,8 @@ IconYoutubeShorts.defaultProps = {
   size: 18,
 };
 
-IconYoutubeShorts = React.memo ? React.memo(IconYoutubeShorts) : IconYoutubeShorts;
+IconYoutubeShorts = React.memo
+  ? React.memo(IconYoutubeShorts)
+  : IconYoutubeShorts;
 
 export default IconYoutubeShorts;

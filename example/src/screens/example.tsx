@@ -2,7 +2,7 @@
 import { useTheme } from '@react-navigation/native';
 import React, { useContext } from 'react';
 import { ScrollView, TouchableHighlight, View } from 'react-native';
-import FastImage from 'react-native-fast-image';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../components';
 import { videos } from '../constants';
@@ -33,7 +33,7 @@ export const Example = () => {
             underlayColor={dark ? 'rgba(0,0,0,.2)' : 'rgba(255,255,255,.2)'}
             key={`${i}`}>
             <View style={{ paddingBottom: 12 }}>
-              <FastImage
+              <Image
                 source={{
                   uri: item.cover,
                 }}
@@ -46,7 +46,7 @@ export const Example = () => {
                   flexDirection: 'row',
                   alignItems: 'center',
                 }}>
-                <FastImage
+                <Image
                   source={{ uri: item.avatar }}
                   style={{
                     width: 40,
@@ -54,7 +54,6 @@ export const Example = () => {
                     borderRadius: 40,
                     marginRight: 8,
                   }}
-                  resizeMode="stretch"
                 />
                 <View style={{ flex: 1 }}>
                   <Text
